@@ -5926,7 +5926,7 @@ figure.highlight {
   .py-xl-10 {
     padding-top: 4rem !important;
     padding-bottom: 4rem !important; } }
-p.info {
+p.message-box {
   position: relative;
   padding: 2.1rem 1rem .8rem;
   border-left: 0.2rem solid #2869e6;
@@ -5936,15 +5936,26 @@ p.info {
   margin: 1.8rem 0 1rem 0;
   line-height: 1.6rem; }
 
-p.info:before {
+p.message-box:before {
   content: attr(data-title);
   position: absolute;
   height: 1.6rem;
   left: 0;
   top: 0;
   padding-left: 12px;
-  background-color: rgba(40, 105, 230, 0.05);
   width: calc(100% - 12px);
   font-weight: bold;
   font-size: .8rem;
   line-height: 1.6rem; }
+
+p.message-box.info {
+  border-left: 0.2rem solid #2869e6; }
+
+p.message-box.info:before {
+  background-color: rgba(40, 105, 230, 0.05); }
+
+p.message-box.warning {
+  border-left-color: #ff9100; }
+
+p.message-box.warning:before {
+  background-color: rgba(255, 145, 0, 0.05); }
