@@ -5976,3 +5976,14 @@ p.message-box.warning {
 
 p.message-box.warning:before {
   background-color: rgba(255, 145, 0, 0.05); }
+
+.grid {
+  display: grid;
+  grid-template-columns: 2fr 2fr;
+  gap: .8rem; }
+
+.grid .grid-item {
+  background-color: #f5f6fa;
+  padding: 2.4rem 1.6rem;
+  border-radius: 2px;
+  align-items: center; }
