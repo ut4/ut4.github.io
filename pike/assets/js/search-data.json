@@ -91,7 +91,7 @@
   },"15": {
     "doc": "Autentikaatio",
     "title": "Käyttäjän salasanan palautus (2. vaihe)",
-    "content": "try { $auth-&gt;getAccountManager()-&gt;finalizePasswordReset( 'pitkä-random-merkkijono', 'e@mail.com', 'newPassword'); // Ok, uusi salasana päivitettiin tietokantaan ja resetointipyyntötiedot // tyhjennettiin tietokannasta } catch (PikeException $e) { if ($e-&gt;getCode() === Authenticator::CREDENTIAL_WAS_INVALID) ; // Resetointiavainta ei ollut olemassa, tai $email ei täsmännyt elseif ($e-&gt;getCode() === Authenticator::KEY_HAD_EXPIRED) ; // Resetointiavain oli vanhentunut else ; // Odottamaton poikkeus } . ",
+    "content": "try { $auth-&gt;getAccountManager()-&gt;finalizePasswordReset( 'pitkä-random-merkkijono', 'newPassword'); // Ok, uusi salasana päivitettiin tietokantaan ja resetointipyyntötiedot // tyhjennettiin tietokannasta } catch (PikeException $e) { if ($e-&gt;getCode() === Authenticator::CREDENTIAL_WAS_INVALID) ; // Resetointiavainta ei ollut olemassa elseif ($e-&gt;getCode() === Authenticator::KEY_HAD_EXPIRED) ; // Resetointiavain oli vanhentunut else ; // Odottamaton poikkeus } . ",
     "url": "https://ut4.github.io/pike/in-depth/authentication.html#k%C3%A4ytt%C3%A4j%C3%A4n-salasanan-palautus-2-vaihe",
     "relUrl": "/in-depth/authentication.html#käyttäjän-salasanan-palautus-2-vaihe"
   },"16": {
@@ -109,19 +109,19 @@
   },"18": {
     "doc": "Reittien käyttäjäoikeudet",
     "title": "Step 1: Reittimiddlewaren lisääminen applikaatioon",
-    "content": "index.php ... $myModules = [AuthorizingRoutes\\MyAuthModule::class, muut reitit...]; ... $app-&gt;handleRequest($req); . ",
+    "content": "index.php ... $myModules = [new AuthorizingRoutes\\MyAuthModule, muut reitit...]; ... $app-&gt;handleRequest($req); . ",
     "url": "https://ut4.github.io/pike/examples/authorizing-routes.html#step-1-reittimiddlewaren-lis%C3%A4%C3%A4minen-applikaatioon",
     "relUrl": "/examples/authorizing-routes.html#step-1-reittimiddlewaren-lisääminen-applikaatioon"
   },"19": {
     "doc": "Reittien käyttäjäoikeudet",
     "title": "Step 2: Reittimiddlewaren implementointi",
-    "content": "Katso myös. Käyttäjäroolit ja oikeudet. AuthorizingRoutes/MyAuthModule.php ... abstract class MyAuthModule { /** * @param \\Pike\\AppContext $ctx */ public static function init(AppContext $ctx): void { $ctx-&gt;acl = new \\Pike\\Auth\\ACL; $ctx-&gt;acl-&gt;setRules(self::makeMyAclRules()); // $ctx-&gt;router-&gt;on('*', function ($req, $res, $next) use ($ctx) { // Tämä tulisi normaalisti sessiosta ($ctx-&gt;auth-&gt;getIdentity()-&gt;role) $userRole = LOGGED_IN_USER_ROLE; // ks. Step 3 [$action, $resource] = explode(':', $req-&gt;routeInfo-&gt;myCtx); if (!$ctx-&gt;acl-&gt;can($userRole, $action, $resource)) $res-&gt;status(403)-&gt;json(['err' =&gt; 'Not permitted']); else $next(); }); } /** * @return \\stdClass */ private static function makeMyAclRules(): \\stdClass { // Nämä tulisi normaalisti esim. tiedostosta tai tietokannasta. $resources = (object) [ 'products' =&gt; ..., 'reviews' =&gt; ... ]; $userPermissions = (object) [ ACL::ROLE_EDITOR =&gt; (object) [ 'products' =&gt; ..., 'reviews' =&gt; ..., ], ACL::ROLE_CONTRIBUTOR =&gt; (object) [ 'products' =&gt; ..., 'reviews' =&gt; ..., ] ]; return (object) [ 'resources' =&gt; $resources, 'userPermissions' =&gt; $userPermissions ]; } } . ",
+    "content": "Katso myös. Käyttäjäroolit ja oikeudet. AuthorizingRoutes/MyAuthModule.php ... final class MyAuthModule { /** * @param \\Pike\\AppContext $ctx */ public function init(AppContext $ctx): void { $ctx-&gt;acl = new \\Pike\\Auth\\ACL; $ctx-&gt;acl-&gt;setRules(self::makeMyAclRules()); // $ctx-&gt;router-&gt;on('*', function ($req, $res, $next) use ($ctx) { // Tämä tulisi normaalisti sessiosta ($ctx-&gt;auth-&gt;getIdentity()-&gt;role) $userRole = LOGGED_IN_USER_ROLE; // ks. Step 3 [$action, $resource] = explode(':', $req-&gt;routeInfo-&gt;myCtx); if (!$ctx-&gt;acl-&gt;can($userRole, $action, $resource)) $res-&gt;status(403)-&gt;json(['err' =&gt; 'Not permitted']); else $next(); }); } /** * @return \\stdClass */ private static function makeMyAclRules(): \\stdClass { // Nämä tulisi normaalisti esim. tiedostosta tai tietokannasta. $resources = (object) [ 'products' =&gt; ..., 'reviews' =&gt; ... ]; $userPermissions = (object) [ ACL::ROLE_EDITOR =&gt; (object) [ 'products' =&gt; ..., 'reviews' =&gt; ..., ], ACL::ROLE_CONTRIBUTOR =&gt; (object) [ 'products' =&gt; ..., 'reviews' =&gt; ..., ] ]; return (object) [ 'resources' =&gt; $resources, 'userPermissions' =&gt; $userPermissions ]; } } . ",
     "url": "https://ut4.github.io/pike/examples/authorizing-routes.html#step-2-reittimiddlewaren-implementointi",
     "relUrl": "/examples/authorizing-routes.html#step-2-reittimiddlewaren-implementointi"
   },"20": {
     "doc": "Reittien käyttäjäoikeudet",
     "title": "Step 3: ACL-informaation lisääminen reitteihin",
-    "content": ". | AuthorizingRoutes/Product/ProductModule.php | AuthorizingRoutes/Review/ReviewModule.php | ... abstract class ProductModule { /** * @param \\Pike\\AppContext $ctx */ public static function init(AppContext $ctx): void { $ctx-&gt;router-&gt;map('POST', '/products', [ProductController::class, 'handleCreateProduct', 'create:products'] ); $ctx-&gt;router-&gt;map('PUT', '/products/[i:productId]', [ProductController::class, 'handleEditProduct', 'edit:products'] ); $ctx-&gt;router-&gt;map('POST', '/products/[i:productId]/comment', [ProductController::class, 'handleAddComment', 'comment:products'] ); } } ... sama setti Review/ReviewModule.php:ssa . ",
+    "content": ". | AuthorizingRoutes/Product/ProductModule.php | AuthorizingRoutes/Review/ReviewModule.php | ... final class ProductModule { /** * @param \\Pike\\AppContext $ctx */ public function init(AppContext $ctx): void { $ctx-&gt;router-&gt;map('POST', '/products', [ProductController::class, 'handleCreateProduct', 'create:products'] ); $ctx-&gt;router-&gt;map('PUT', '/products/[i:productId]', [ProductController::class, 'handleEditProduct', 'edit:products'] ); $ctx-&gt;router-&gt;map('POST', '/products/[i:productId]/comment', [ProductController::class, 'handleAddComment', 'comment:products'] ); } } ... sama setti Review/ReviewModule.php:ssa . ",
     "url": "https://ut4.github.io/pike/examples/authorizing-routes.html#step-3-acl-informaation-lis%C3%A4%C3%A4minen-reitteihin",
     "relUrl": "/examples/authorizing-routes.html#step-3-acl-informaation-lisääminen-reitteihin"
   },"21": {
@@ -151,13 +151,13 @@
   },"25": {
     "doc": "Pike 101",
     "title": "index.php",
-    "content": "index-tiedoston tehtävänä on: . | Konfiguroida autoloader (1) | Rekisteröidä applikaation moduulit (2) | Handlata pyyntö (3) | . &lt;?php // (1) $loader = require dirname(__DIR__) . '/vendor/autoload.php'; $loader-&gt;addPsr4('Me\\\\Pike101\\\\', __DIR__ . '/src'); // (2) $myModules = [\\Me\\Pike101\\SomeModule::class]; $app = \\Pike\\App::create($myModules); // (3) $req = \\Pike\\Request::createFromGlobals($_GET['q'] ?? '/'); $app-&gt;handleRequest($req); . ",
+    "content": "index-tiedoston tehtävänä on: . | Konfiguroida autoloader (1) | Rekisteröidä applikaation moduulit (2) | Handlata pyyntö (3) | . &lt;?php // (1) $loader = require dirname(__DIR__) . '/vendor/autoload.php'; $loader-&gt;addPsr4('Me\\\\Pike101\\\\', __DIR__ . '/src'); // (2) $myModules = [new \\Me\\Pike101\\SomeModule]; $app = new \\Pike\\App($myModules); // (3) $req = \\Pike\\Request::createFromGlobals($_GET['q'] ?? '/'); $app-&gt;handleRequest($req); . ",
     "url": "https://ut4.github.io/pike/examples/basics.html#indexphp",
     "relUrl": "/examples/basics.html#indexphp"
   },"26": {
     "doc": "Pike 101",
     "title": "Pike101/SomeModule.php",
-    "content": "Moduulitiedostot puolestaan: . | Rekisteröi reitit (1), ks. myös examples/mapping-routes.html | . Moduulitiedostoja on yleensä useita, ja jokainen tiedosto rekisteröi omat reittinsä (esim. GET tuotteet/:id, POST /tuotteet jne.). Moduulitiedostoissa voi suorittaa myös muita kertaluontoisia tehtäviä, kuten avata tietokantayhteyden. &lt;?php declare(strict_types=1); namespace Me\\Pike101; abstract class SomeModule { /** * @param \\Pike\\AppContext $ctx */ public static function init(\\Pike\\AppContext $ctx): void { // (1) $ctx-&gt;router-&gt;map('GET', '/some-route', [SomeController::class, 'handleSomeRoute'] ); $ctx-&gt;router-&gt;map('POST', '/another-route/[*:someParam]', [SomeController::class, 'handleAnotherRoute'] ); } } . ",
+    "content": "Moduulitiedostot puolestaan: . | Rekisteröi reitit (1), ks. myös examples/mapping-routes.html | . Moduulitiedostoja on yleensä useita, ja jokainen tiedosto rekisteröi omat reittinsä (esim. GET tuotteet/:id, POST /tuotteet jne.). Moduulitiedostoissa voi suorittaa myös muita kertaluontoisia tehtäviä, kuten avata tietokantayhteyden. &lt;?php declare(strict_types=1); namespace Me\\Pike101; final class SomeModule { /** * @param \\Pike\\AppContext $ctx */ public function init(\\Pike\\AppContext $ctx): void { // (1) $ctx-&gt;router-&gt;map('GET', '/some-route', [SomeController::class, 'handleSomeRoute'] ); $ctx-&gt;router-&gt;map('POST', '/another-route/[*:someParam]', [SomeController::class, 'handleAnotherRoute'] ); } } . ",
     "url": "https://ut4.github.io/pike/examples/basics.html#pike101somemodulephp",
     "relUrl": "/examples/basics.html#pike101somemodulephp"
   },"27": {
@@ -385,25 +385,25 @@
   },"64": {
     "doc": "Hei Maailma!",
     "title": "Step 1. Asenna Pike",
-    "content": "Luo projektille oma kansio devausympäristösi serverin public_html/htdocs -kansioon, ja anna sille nimeksi hello-pike. Luo sinne uusi uusi tiedosto composer.json, ja kirjoita sen sisällöksi: . { \"name\": \"me/my-app\", \"require\": { \"ut4/pike\": \"0.8.1\" } } . Avaa komentokehote, ja siirry sillä edellä luotuun kansion cd /&lt;publicHtmlKansio&gt;/hello-pike/. Asenna projekti ajamalla komento composer install (tai php /jokin/polku/composer.phar install). Projektikansioon pitäisi ilmestyä vendor-kansio, ja sen sisälle Pike ja kaikki sen riippuvuudet. ",
+    "content": "Luo projektille oma kansio devausympäristösi serverin public_html/htdocs -kansioon, ja anna sille nimeksi tut1-hello-pike. Luo sinne uusi uusi tiedosto composer.json, ja kirjoita sen sisällöksi: . { \"name\": \"me/my-app\", \"require\": { \"ut4/pike\": \"0.9.0\" } } . Avaa komentokehote, ja siirry sillä edellä luotuun kansion cd /&lt;publicHtmlKansio&gt;/tut1-hello-pike/. Asenna projekti ajamalla komento composer install (tai php /jokin/polku/composer.phar install). Projektikansioon pitäisi ilmestyä vendor-kansio, ja sen sisälle Pike ja kaikki sen riippuvuudet. ",
     "url": "https://ut4.github.io/pike/tutorials/hello-world.html#step-1-asenna-pike",
     "relUrl": "/tutorials/hello-world.html#step-1-asenna-pike"
   },"65": {
     "doc": "Hei Maailma!",
     "title": "Step 2. Savutestaa",
-    "content": "Verifioi edellinen steppi luomalla uusi tiedosto /&lt;publicHtmlKansio&gt;/hello-pike/index.php ja kirjoita sen sisällöksi, . &lt;?php declare(strict_types=1); require __DIR__ . '/vendor/autoload.php'; abstract class HelloModule { public static function init(\\Pike\\AppContext $ctx): void { // todo } } $app = \\Pike\\App::create(['HelloModule']); echo $app::VERSION; . Avaa lempiselaimesi, ja siirry sillä osoitteseen http://&lt;devausYmpäristösiOsoite&gt;/hello-pike/index.php. Mikäli selain tulostaa versionumeron, asennus onnistui. ",
+    "content": "Verifioi edellinen steppi luomalla uusi tiedosto /&lt;publicHtmlKansio&gt;/tut1-hello-pike/index.php ja kirjoita sen sisällöksi, . &lt;?php declare(strict_types=1); require __DIR__ . '/vendor/autoload.php'; final class HelloModule { public function init(\\Pike\\AppContext $ctx): void { // todo } } $app = new \\Pike\\App([new HelloModule]); echo $app::VERSION; . Avaa lempiselaimesi, ja siirry sillä osoitteseen http://&lt;devausYmpäristösiOsoite&gt;/tut1-hello-pike/index.php. Mikäli selain tulostaa versionumeron, asennus onnistui. ",
     "url": "https://ut4.github.io/pike/tutorials/hello-world.html#step-2-savutestaa",
     "relUrl": "/tutorials/hello-world.html#step-2-savutestaa"
   },"66": {
     "doc": "Hei Maailma!",
     "title": "Step 3. Lisää reittikäsittelijä",
-    "content": "Nyt sinulla on entry-pointti applikaatiolle, mutta ei vielä yhtään reittiä jota se osaisi käsitellä. Korjaa tilanne rekisteröimällä applikaatioon uusi reittikäsittelijä urlille / - päivitä /&lt;publicHtmlKansio&gt;/hello-pike/index.php-tiedoston sisällöksi: . &lt;?php declare(strict_types=1); require __DIR__ . '/vendor/autoload.php'; abstract class HelloModule { public static function init(\\Pike\\AppContext $ctx): void { $ctx-&gt;router-&gt;map('GET', '/', ['HelloController', 'renderHelloPage']); } } final class HelloController { public function renderHelloPage(\\Pike\\Response $res): void { $res-&gt;plain('Hello'); } } $app = \\Pike\\App::create(['HelloModule']); $app-&gt;handleRequest($_GET['q'] ?? '/'); . Uudelleenavaa lempiselaimesi osoiteella http://&lt;devausYmpäristösiOsoite&gt;/hello-pike/index.php?q=/, joka pitäisi versionumeron sijaan tulostaa reittikäsittelijän asettama vastaus. ",
+    "content": "Nyt sinulla on entry-pointti applikaatiolle, mutta ei vielä yhtään reittiä jota se osaisi käsitellä. Korjaa tilanne rekisteröimällä applikaatioon uusi reittikäsittelijä urlille / - päivitä /&lt;publicHtmlKansio&gt;/tut1-hello-pike/index.php-tiedoston sisällöksi: . &lt;?php declare(strict_types=1); require __DIR__ . '/vendor/autoload.php'; final class HelloModule { public function init(\\Pike\\AppContext $ctx): void { $ctx-&gt;router-&gt;map('GET', '/', ['HelloController', 'renderHelloPage']); } } final class HelloController { public function renderHelloPage(\\Pike\\Response $res): void { $res-&gt;plain('Hello'); } } $app = new \\Pike\\App([new HelloModule]); $app-&gt;handleRequest($_GET['q'] ?? '/'); . Uudelleenavaa lempiselaimesi osoiteella http://&lt;devausYmpäristösiOsoite&gt;/tut1-hello-pike/index.php?q=/, joka pitäisi versionumeron sijaan tulostaa reittikäsittelijän asettama vastaus. ",
     "url": "https://ut4.github.io/pike/tutorials/hello-world.html#step-3-lis%C3%A4%C3%A4-reittik%C3%A4sittelij%C3%A4",
     "relUrl": "/tutorials/hello-world.html#step-3-lisää-reittikäsittelijä"
   },"67": {
     "doc": "Hei Maailma!",
     "title": "Yhteenveto",
-    "content": "Tässä tutoriaalissa: . | Asensit Piken, ja loit uudelle applikaatiolle projektikansion | Loit applikaatiolle entry-pointin index.php, joka luo Pike-instanssin, joka osaa vastata GET /-pyyntöön | . Valmis seuraavaan steppiin? Goto Tutoriaali #2: Moduulit. ",
+    "content": "Tässä tutoriaalissa: . | Asensit Piken, ja loit uudelle applikaatiolle projektikansion | Loit applikaatiolle entry-pointin index.php, joka luo Pike-instanssin, jonka opetit vastaamaan GET /-pyyntöön | . Valmis seuraavaan steppiin? Goto Tutoriaali #2: Moduulit. ",
     "url": "https://ut4.github.io/pike/tutorials/hello-world.html#yhteenveto",
     "relUrl": "/tutorials/hello-world.html#yhteenveto"
   },"68": {
@@ -457,7 +457,7 @@
   },"76": {
     "doc": "Reittien mappaus",
     "title": "MappingRoutes/Module.php",
-    "content": "&lt;?php declare(strict_types=1); namespace Me\\MappingRoutes; abstract class Module { /** * @param \\Pike\\AppContext $ctx */ public static function init(\\Pike\\AppContext $ctx): void { $ctx-&gt;router-&gt;map('GET', '/route-a', [Controller::class, 'handleRouteA'] ); $ctx-&gt;router-&gt;map('GET', '/route-b/[i:myNumber]/[w:myOptionalSlug]?', [Controller::class, 'handleRouteB'] ); $ctx-&gt;router-&gt;map('GET', '/route-c/[foo|bar:fooOrBar]', [Controller::class, 'handleRouteC'], 'nameOfRouteC' ); $ctx-&gt;router-&gt;map('POST', '/route-d/[i:id]', [Controller::class, 'handleRouteC', ['my' =&gt; 'context']] ); /* $ctx-&gt;router-&gt;map('GET', '/some-route', 'notAnArray'); // PikeException $ctx-&gt;router-&gt;map('GET', '/some-route', ['incomplete']); // PikeException $ctx-&gt;router-&gt;map('GET', '/some-route'); // PikeException */ } } . ",
+    "content": "&lt;?php declare(strict_types=1); namespace Me\\MappingRoutes; final class Module { /** * @param \\Pike\\AppContext $ctx */ public function init(\\Pike\\AppContext $ctx): void { $ctx-&gt;router-&gt;map('GET', '/route-a', [Controller::class, 'handleRouteA'] ); $ctx-&gt;router-&gt;map('GET', '/route-b/[i:myNumber]/[w:myOptionalSlug]?', [Controller::class, 'handleRouteB'] ); $ctx-&gt;router-&gt;map('GET', '/route-c/[foo|bar:fooOrBar]', [Controller::class, 'handleRouteC'], 'nameOfRouteC' ); $ctx-&gt;router-&gt;map('POST', '/route-d/[i:id]', [Controller::class, 'handleRouteC', ['my' =&gt; 'context']] ); /* $ctx-&gt;router-&gt;map('GET', '/some-route', 'notAnArray'); // PikeException $ctx-&gt;router-&gt;map('GET', '/some-route', ['incomplete']); // PikeException $ctx-&gt;router-&gt;map('GET', '/some-route'); // PikeException */ } } . ",
     "url": "https://ut4.github.io/pike/examples/mapping-routes.html#mappingroutesmodulephp",
     "relUrl": "/examples/mapping-routes.html#mappingroutesmodulephp"
   },"77": {
@@ -493,13 +493,13 @@
   },"82": {
     "doc": "Moduulit",
     "title": "Johdanto",
-    "content": "Tässä tutoriaalissa luot REST-backendin kuvitteelliselle peliaiheiselle applikaatiolle. Tutoriaalissa luot API:in kaksi moduulia: . | Genre: käsittelee peligenreihin liittyvät HTTP-pyynnöt | Game: käsittelee peleihin liittyvät HTTP-pyynnöt | . ",
+    "content": "Tässä tutoriaalissa luot REST-backendin kuvitteelliselle peliaiheiselle applikaatiolle. Tutoriaalissa luot API:in kaksi moduulia: . | Game: käsittelee peleihin liittyvät HTTP-pyynnöt | Genre: käsittelee peligenreihin liittyvät HTTP-pyynnöt | . ",
     "url": "https://ut4.github.io/pike/tutorials/modules.html#johdanto",
     "relUrl": "/tutorials/modules.html#johdanto"
   },"83": {
     "doc": "Moduulit",
     "title": "Step 1. Luo kontrollerit ja moduulit",
-    "content": "Luo kopio edellisen tutoriaalin projektikansiosta (tut1-hello-pike) ja anna kopioidulle kansiolle nimeksi tut2-modules. Luo kansioon kansio tut2-modules/src, ja sen sisälle kaksi uutta kansiota - src/Game ja src/Genre. Luo kumpaankin kansioon kaksi uutta tiedostoa: . src/Game/GamesModule.php . &lt;?php declare(strict_types=1); namespace Me\\MyApp\\Game; use Pike\\AppContext; abstract class GamesModule { public static function init(AppContext $ctx): void { $ctx-&gt;router-&gt;map('GET', '/games/[w:genreSlug]', [GamesController::class, 'listGamesByCategory'] ); } } . src/Game/GamesController.php . &lt;?php declare(strict_types=1); namespace Me\\MyApp\\Game; use Pike\\{Request, Response}; final class GamesController { public function listGamesByCategory(Request $req, Response $res): void { $games = [\"@todo pelit kategorialle {$req-&gt;params-&gt;genreSlug}\"]; $res-&gt;json($games); } } . src/Game/GenresModule.php . &lt;?php declare(strict_types=1); namespace Me\\MyApp\\Genre; use Pike\\AppContext; abstract class GenresModule { public static function init(AppContext $ctx): void { $ctx-&gt;router-&gt;map('GET', '/genres', [GenresController::class, 'listGenres'] ); } } . src/Game/GenresController.php . &lt;?php declare(strict_types=1); namespace Me\\MyApp\\Genre; use Pike\\Response; final class GenresController { public function listGenres(Response $res): void { $genres = [ (object) ['name' =&gt; 'Real time tactics', 'slug' =&gt; 'real-time-tactics'], (object) ['name' =&gt; 'Role playing game', 'slug' =&gt; 'role-playing-game'], (object) ['name' =&gt; 'First person shooter', 'slug' =&gt; 'first-person-shooter'], (object) ['name' =&gt; 'Point-and-click', 'slug' =&gt; 'point-and-click'], (object) ['name' =&gt; 'Racing', 'slug' =&gt; 'racing'], ]; $res-&gt;json($genres); } } . Päivitä index.php, composer.json ja testaa . Konfiguroi composerin autoloader lataamaan projektimme nimiavaruus Me\\MyApp. Päivitä composer.json … . \"name\": \"me/my-app\", \"require\": { \"ut4/pike\": \"0.8.1\" + }, + \"autoload\": { + \"psr-4\": {\"Me\\\\MyApp\\\\\": \"src/\"} } } . … ja tämän jälkeen aja komento composer update. Lisää Pike-applikaation luontikutsuun edellä luomasi moduulit. Päivitä index.php . &lt;?php declare(strict_types=1); $loader = require __DIR__ . '/vendor/autoload.php'; $app = \\Pike\\App::create([\\Me\\MyApp\\Game\\GamesModule::class, \\Me\\MyApp\\Genre\\GenresModule::class]); $app-&gt;handleRequest($_GET['q'] ?? '/'); . Avaa tämän jälkeen selaimesi osoitteissa http://&lt;devausYmpäristösiOsoite&gt;/tut2-modules/index.php?q=/games/real-time-tactics ja http://&lt;devausYmpäristösiOsoite&gt;/tut2-modules/index.php?q=/genres, joka pitäisi listata kontrollerien palauttaman kovakoodatun datan. ",
+    "content": "Luo kopio edellisen tutoriaalin projektikansiosta (tut1-hello-pike) ja anna kopioidulle kansiolle nimeksi tut2-modules. Luo kansioon kansio tut2-modules/src, ja sen sisälle kaksi uutta kansiota - src/Game ja src/Genre. Luo kumpaankin kansioon kaksi uutta tiedostoa: . src/Game/GamesModule.php . &lt;?php declare(strict_types=1); namespace Me\\MyApp\\Game; use Pike\\AppContext; final class GamesModule { public function init(AppContext $ctx): void { $ctx-&gt;router-&gt;map('GET', '/games/[w:genreSlug]', [GamesController::class, 'listGamesByCategory'] ); } } . src/Game/GamesController.php . &lt;?php declare(strict_types=1); namespace Me\\MyApp\\Game; use Pike\\{Request, Response}; final class GamesController { public function listGamesByCategory(Request $req, Response $res): void { $games = [\"@todo pelit kategorialle {$req-&gt;params-&gt;genreSlug}\"]; $res-&gt;json($games); } } . src/Game/GenresModule.php . &lt;?php declare(strict_types=1); namespace Me\\MyApp\\Genre; use Pike\\AppContext; final class GenresModule { public function init(AppContext $ctx): void { $ctx-&gt;router-&gt;map('GET', '/genres', [GenresController::class, 'listGenres'] ); } } . src/Game/GenresController.php . &lt;?php declare(strict_types=1); namespace Me\\MyApp\\Genre; use Pike\\Response; final class GenresController { public function listGenres(Response $res): void { $genres = [ (object) ['name' =&gt; 'Real time tactics', 'slug' =&gt; 'real-time-tactics'], (object) ['name' =&gt; 'Role playing game', 'slug' =&gt; 'role-playing-game'], (object) ['name' =&gt; 'First person shooter', 'slug' =&gt; 'first-person-shooter'], (object) ['name' =&gt; 'Point-and-click', 'slug' =&gt; 'point-and-click'], (object) ['name' =&gt; 'Racing', 'slug' =&gt; 'racing'], ]; $res-&gt;json($genres); } } . Päivitä index.php, composer.json ja testaa . Konfiguroi composerin autoloader lataamaan projektimme nimiavaruus Me\\MyApp. Päivitä composer.json … . \"name\": \"me/my-app\", \"require\": { \"ut4/pike\": \"0.9.0\" + }, + \"autoload\": { + \"psr-4\": {\"Me\\\\MyApp\\\\\": \"src/\"} } } . … ja aja tämän jälkeen komento composer update (projektikansion juuressa /tut2-modules). Lisää Pike-applikaation luontikutsuun edellä luomasi moduulit. Päivitä index.php . &lt;?php declare(strict_types=1); $loader = require __DIR__ . '/vendor/autoload.php'; $app = new \\Pike\\App([new \\Me\\MyApp\\Game\\GamesModule, new \\Me\\MyApp\\Genre\\GenresModule]); $app-&gt;handleRequest($_GET['q'] ?? '/'); . Avaa tämän jälkeen selaimesi osoitteissa http://&lt;devausYmpäristösiOsoite&gt;/tut2-modules/index.php?q=/games/real-time-tactics ja http://&lt;devausYmpäristösiOsoite&gt;/tut2-modules/index.php?q=/genres, joka pitäisi listata kontrollerien palauttaman kovakoodatun datan. ",
     "url": "https://ut4.github.io/pike/tutorials/modules.html#step-1-luo-kontrollerit-ja-moduulit",
     "relUrl": "/tutorials/modules.html#step-1-luo-kontrollerit-ja-moduulit"
   },"84": {
@@ -511,7 +511,7 @@
   },"85": {
     "doc": "Moduulit",
     "title": "Step 3. Bundlaa moduulit yhden luokan alle",
-    "content": "Tehdään applikaatiostamme testattavampi irroittamalla se index.php -tiedostosta omaksi luokakseen. Luo uusi tiedosto src/MyGamingSiteApp.php . &lt;?php declare(strict_types=1); namespace Me\\MyApp; use Pike\\App; use Me\\MyApp\\Game\\GamesModule; use Me\\MyApp\\Genre\\GenresModule; abstract class MyGamingSiteApp { public static function create(): App { return App::create([ GamesModule::class, GenresModule::class ]); } } . Päivitä index.php . $loader = require __DIR__ . '/vendor/autoload.php'; -$app = \\Pike\\App::create([\\Me\\MyApp\\Game\\GamesModule::class, - \\Me\\MyApp\\Genre\\GenresModule::class]); +$app = \\Me\\MyApp\\MyGamingSiteApp::create(); $app-&gt;handleRequest($_GET['q'] ?? '/'); . ",
+    "content": "Tehdään applikaatiostamme testattavampi irroittamalla se index.php -tiedostosta omaksi luokakseen. Luo uusi tiedosto src/MyGamingSiteApp.php . &lt;?php declare(strict_types=1); namespace Me\\MyApp; use Pike\\App; use Me\\MyApp\\Game\\GamesModule; use Me\\MyApp\\Genre\\GenresModule; final class MyGamingSiteApp { public static function create(): App { return new App([ new GamesModule, new GenresModule ]); } } . Päivitä index.php . $loader = require __DIR__ . '/vendor/autoload.php'; -$app = new \\Pike\\App([new \\Me\\MyApp\\Game\\GamesModule, - new \\Me\\MyApp\\Genre\\GenresModule]); +$app = \\Me\\MyApp\\MyGamingSiteApp::create(); $app-&gt;handleRequest($_GET['q'] ?? '/'); . ",
     "url": "https://ut4.github.io/pike/tutorials/modules.html#step-3-bundlaa-moduulit-yhden-luokan-alle",
     "relUrl": "/tutorials/modules.html#step-3-bundlaa-moduulit-yhden-luokan-alle"
   },"86": {
@@ -523,7 +523,7 @@
   },"87": {
     "doc": "Pike&bsol;AppConfig",
     "title": "class Pike\\AppConfig",
-    "content": "Varastoi App::create():lle tarjotun konfiguraation. ",
+    "content": "Varastoi App-&gt;__construct():lle tarjotun konfiguraation. ",
     "url": "https://ut4.github.io/pike/api/pike_app-config.html#class-pikeappconfig",
     "relUrl": "/api/pike_app-config.html#class-pikeappconfig"
   },"88": {
@@ -553,694 +553,712 @@
   },"92": {
     "doc": "Pike&bsol;AppContext",
     "title": "Synopsis",
-    "content": "class AppContext { /* Muuttujat */ public Router $router ; public AppConfig $appConfig ; public ?Db $db ; public ?Authenticator $auth ; public ?ACL $acl ; /* Metodit */ public __construct ( array&lt;string, string&gt; $serviceHints = [] ) } . ",
+    "content": "class AppContext { /* Muuttujat */ public Router $router ; public AppConfig $appConfig ; public Request $req ; public Response $res ; public ?Db $db ; public ?Authenticator $auth ; } . ",
     "url": "https://ut4.github.io/pike/api/pike_app-context.html#synopsis",
     "relUrl": "/api/pike_app-context.html#synopsis"
   },"93": {
     "doc": "Pike&bsol;AppContext",
     "title": "Muuttujat",
-    "content": "router Pike\\Router-olio. appConfig Pike\\AppConfig-olio. db Pike\\Db-olio. auth Pike\\Auth\\Authenticator-olio. acl Pike\\Auth\\ACL-olio. ",
+    "content": "router Pike\\Router-olio. appConfig Pike\\AppConfig-olio. req Pike\\Request-olio. res Pike\\Response-olio. db Pike\\Db-olio. auth Pike\\Auth\\Authenticator-olio. ",
     "url": "https://ut4.github.io/pike/api/pike_app-context.html#muuttujat",
     "relUrl": "/api/pike_app-context.html#muuttujat"
   },"94": {
-    "doc": "Pike&bsol;AppContext",
-    "title": "Metodit",
-    "content": "__construct() . Luo uuden konteksti-olion, ja asettaa ohjeet applikaation luonnin yhteydessä luotaville olioille (db, tai auth). Signature . public function __construct ( array&lt;string, string&gt; $serviceHints = [] ) . Esimerkki . $ctx = new AppContext(['db' =&gt; App::MAKE_AUTOMATICALLY]); . ",
-    "url": "https://ut4.github.io/pike/api/pike_app-context.html#metodit",
-    "relUrl": "/api/pike_app-context.html#metodit"
-  },"95": {
     "doc": "Pike&bsol;AppContext",
     "title": "Pike&bsol;AppContext",
     "content": " ",
     "url": "https://ut4.github.io/pike/api/pike_app-context.html",
     "relUrl": "/api/pike_app-context.html"
-  },"96": {
+  },"95": {
     "doc": "Pike&bsol;App",
     "title": "class Pike\\App",
-    "content": "Pike-applikaatio: kasailee kaikki applikaation moduulit, vastaanottaa HTTP-pyynnöt, ja delegoi moduuleille. Katso myös Pike 101. ",
+    "content": "Pike-applikaatio: kasailee applikaation moduulit, vastaanottaa HTTP-pyynnöt, ja delegoi moduuleille. Katso myös Pike 101. ",
     "url": "https://ut4.github.io/pike/api/pike_app.html#class-pikeapp",
     "relUrl": "/api/pike_app.html#class-pikeapp"
-  },"97": {
+  },"96": {
     "doc": "Pike&bsol;App",
     "title": "Synopsis",
-    "content": "final class App { /* Vakiot */ const VERSION = '&lt;major&gt;.&lt;minor&gt;.&lt;patch&gt;[-&lt;identifiers&gt;]' ; const MAKE_AUTOMATICALLY = '@auto' ; /* Metodit */ public handleRequest ( Request|string|null $requestOrUrl, ?string $baseUrl = null ) : void public static create ( class-string[] $modules, string|array|AppConfig $config = null, AppContext $ctx = null, ?callable $makeInjector = null ) : self } . ",
+    "content": "final class App { /* Vakiot */ const VERSION = '&lt;major&gt;.&lt;minor&gt;.&lt;patch&gt;[-&lt;identifiers&gt;]' ; const MAKE_AUTOMATICALLY = '@auto' ; /* Metodit */ public __construct( object[] $modules, ?\\Closure $populateCtx = null, ?AppContext $initialCtx = null, ?Router $router = null ) public handleRequest ( Request|string|null $requestOrUrl, ?string $baseUrl = null ) : void public getAppCtx ( void ) : AppContext } . ",
     "url": "https://ut4.github.io/pike/api/pike_app.html#synopsis",
     "relUrl": "/api/pike_app.html#synopsis"
-  },"98": {
+  },"97": {
     "doc": "Pike&bsol;App",
     "title": "Vakiot",
     "content": "VERSION Piken versionumero, noudattaa semanttista versiointia. MAKE_AUTOMATICALLY Eliminoi magiaa. ",
     "url": "https://ut4.github.io/pike/api/pike_app.html#vakiot",
     "relUrl": "/api/pike_app.html#vakiot"
-  },"99": {
+  },"98": {
     "doc": "Pike&bsol;App",
     "title": "Metodit",
-    "content": "handleRequest() . Prosessoi HTTP-pyynnön. Signature . public function handleRequest ( Request|string|null $requestOrUrl, ?string $baseUrl = null ) : void . Esimerkit . Katso myös Esimerkit &gt; Pike 101 &gt; index.php. $app-&gt;handleRequest(null, '/dir/'); . create() . Luo uuden applikaatio-olion. Huomaa että luokan konstruktorin näkyvyys on private, joten applikaatio-olion voi luoda vain tällä metodilla. Signature . public static function create ( class-string[] $modules, string|array|AppConfig $config = null, AppContext $ctx = null, ?callable $makeInjector = null ) : self . Esimerkit . Katso myös Esimerkit &gt; Pike 101 &gt; index.php. $app = App::create('/'); . ",
+    "content": "__construct() . Luo uuden applikaatio-olion. Signature . public function __construct( object[] $modules, ?\\Closure $populateCtx = null, ?AppContext $initialCtx = null, ?Router $router = null ) . Esimerkit . Katso myös Esimerkit &gt; Pike 101 &gt; index.php. $app = new App([new MyModule]); . handleRequest() . Prosessoi HTTP-pyynnön. Signature . public function handleRequest ( Request|string|null $requestOrUrl, ?string $baseUrl = null ) : void . Esimerkit . Katso myös Esimerkit &gt; Pike 101 &gt; index.php. $app-&gt;handleRequest(null, '/dir/'); . getAppCtx() . Getteri. Signature . public function getAppCtx( void ) : AppContext . ",
     "url": "https://ut4.github.io/pike/api/pike_app.html#metodit",
     "relUrl": "/api/pike_app.html#metodit"
-  },"100": {
+  },"99": {
     "doc": "Pike&bsol;App",
     "title": "Pike&bsol;App",
     "content": " ",
     "url": "https://ut4.github.io/pike/api/pike_app.html",
     "relUrl": "/api/pike_app.html"
-  },"101": {
+  },"100": {
     "doc": "Pike&bsol;ArrayUtils",
     "title": "class Pike\\ArrayUtils",
     "content": "Taulukkojen (ja ArrayObject-olioden) käsittelyä helpottava luokka. ",
     "url": "https://ut4.github.io/pike/api/pike_array-utils.html#class-pikearrayutils",
     "relUrl": "/api/pike_array-utils.html#class-pikearrayutils"
-  },"102": {
+  },"101": {
     "doc": "Pike&bsol;ArrayUtils",
     "title": "Synopsis",
     "content": "class ArrayUtils { /* Metodit */ public findByKey ( array|ArrayObject $array, mixed $val, string $key, mixed $default = null ) : mixed|null public filterByKey ( array|ArrayObject $array, mixed $val, string $key ) : array|ArrayObject public findIndexByKey ( array|ArrayObject $array, mixed $val, string $key ) : int } . ",
     "url": "https://ut4.github.io/pike/api/pike_array-utils.html#synopsis",
     "relUrl": "/api/pike_array-utils.html#synopsis"
-  },"103": {
+  },"102": {
     "doc": "Pike&bsol;ArrayUtils",
     "title": "Metodit",
     "content": "findByKey() . Palauttaa taulukosta ensimmäisen objektin tai taulukon jonka $obj-&gt;key ?? $obj[$key] === $val, tai $default mikäli sellaista ei löytynyt. Signature . public static function findByKey ( array|ArrayObject $array, mixed $val, string $key, mixed $default = null ) : mixed|null . Esimerkit . $arr = [(object) ['id' =&gt; '1'], (object) ['id' =&gt; '2']]; ArrayUtils::findByKey($arr, '1', 'id', 'none'); // (object) ['id' =&gt; '1'] ArrayUtils::findByKey($arr, '5', 'id', 'none'); // 'none' . filterByKey() . Palauttaa uuden taulukon/ArrayObjektin jonka sisältönä vain ne $array:n objektit tai taulukot joiden $obj-&gt;key ?? $obj[$key] === $val. Mikäli yhtään ei löytynyt, palauttaa tyhjän taulukon/ArrayObjektin. Signature . public static function filterByKey ( array|ArrayObject $array, mixed $val, string $key ) : array|ArrayObject . Esimerkit . $arr = [(object) ['id' =&gt; '1'], (object) ['id' =&gt; '2']]; ArrayUtils::filterByKey($arr, '1', 'id'); // [(object) ['id' =&gt; '1']] ArrayUtils::filterByKey($arr, '5', 'id'); // [] . findIndexByKey() . Palauttaa taulukon ensimmäisen objektin tai taulukon indeksin jonka $obj-&gt;key ?? $obj[$key] === $val, tai -1 mikäli sellaista ei löytynyt. Signature . public static function findIndexByKey ( array|ArrayObject $array, mixed $val, string $key ) : int . Esimerkit . $arr = [(object) ['id' =&gt; '1'], (object) ['id' =&gt; '2']]; ArrayUtils::findIndexByKey($arr, '1', 'id'); // 0 ArrayUtils::findIndexByKey($arr, '5', 'id'); // -1 . ",
     "url": "https://ut4.github.io/pike/api/pike_array-utils.html#metodit",
     "relUrl": "/api/pike_array-utils.html#metodit"
-  },"104": {
+  },"103": {
     "doc": "Pike&bsol;ArrayUtils",
     "title": "Pike&bsol;ArrayUtils",
     "content": " ",
     "url": "https://ut4.github.io/pike/api/pike_array-utils.html",
     "relUrl": "/api/pike_array-utils.html"
-  },"105": {
+  },"104": {
     "doc": "Pike&bsol;Auth&bsol;AccountManager",
     "title": "class Pike\\Auth\\AccountManager",
     "content": "Autentikaatiomoduulin käyttäjänhallinnan julkinen API. Luokkaa ei tarvitse instantioida manuaalisesti, vaan sitä käytetään Authenticator-&gt;getAccountManager() -metodin kautta. ",
     "url": "https://ut4.github.io/pike/api/auth/pike_auth_account-manager.html#class-pikeauthaccountmanager",
     "relUrl": "/api/auth/pike_auth_account-manager.html#class-pikeauthaccountmanager"
-  },"106": {
+  },"105": {
     "doc": "Pike&bsol;Auth&bsol;AccountManager",
     "title": "Synopsis",
-    "content": "class AccountManager { /* Metodit */ public requestNewAccount ( string $username, string $email, string $password, callable $makeEmailSettings, int $role = ACL::ROLE_LAST ) : string public activateAccount ( string $activationKey ) : void public requestPasswordReset ( string $usernameOrEmail, callable $makeEmailSettings ) : void public finalizePasswordReset ( string $key, string $email, string $newPassword ) : void } . ",
+    "content": "class AccountManager { /* Metodit */ public requestNewAccount ( string $username, string $email, string $password, callable $makeEmailSettings, int $role = ACL::ROLE_LAST ) : string public activateAccount ( string $activationKey ) : void public requestPasswordReset ( string $usernameOrEmail, callable $makeEmailSettings ) : void public finalizePasswordReset ( string $key, string $newPassword ) : void } . ",
     "url": "https://ut4.github.io/pike/api/auth/pike_auth_account-manager.html#synopsis",
     "relUrl": "/api/auth/pike_auth_account-manager.html#synopsis"
-  },"107": {
+  },"106": {
     "doc": "Pike&bsol;Auth&bsol;AccountManager",
     "title": "Metodit",
-    "content": "requestNewAccount() . Luo uuden ei-aktivoidun tilin tietokantaan. Signature . public function requestNewAccount ( string $username, string $email, string $password, callable $makeEmailSettings, int $role = ACL::ROLE_LAST ) : string . Esimerkit . Katso myös Autentikaatio &gt; Käyttäjän luominen (1. vaihe). $insertId = $auth-&gt;getAccountManager()-&gt;requestNewAccount( 'user', 'e@mail.com', 'pass', function (\\Pike\\Entities\\User $user, string $activationKey, object $settings ) : void { // ... }, \\Pike\\Auth\\ACL::ROLE_CONTRIBUTOR); . activateAccount() . Aktivoi tietokantaan insertoidun ei-aktivoidun tilin. Signature . public function activateAccount ( string $activationKey ) : void . Esimerkit . Katso myös Autentikaatio &gt; Käyttäjän aktivoiminen (2. vaihe). $auth-&gt;getAccountManager()-&gt;activateAccount('pitkä-random-merkkijono'); . requestPasswordReset() . Asettaa tilin salasanan palautustilaan. Signature . public function requestPasswordReset ( string $usernameOrEmail, callable $makeEmailSettings ) : void . Esimerkit . Katso myös Autentikaatio &gt; Käyttäjän salasanan palautus (1. vaihe). $auth-&gt;getAccountManager()-&gt;requestPasswordReset( 'e@mail.com', function (\\Pike\\Entities\\User $user, string $resetKey, object $settings ) : void { // ... }, new \\Pike\\PhpMailerMailer); . finalizePasswordReset() . Asettaa tilille uuden salasanan, ja palauttaa sen salasanan palautustilasta. Signature . public function finalizePasswordReset ( string $key, string $email, string $newPassword ) : void . Esimerkit . Katso myös Autentikaatio &gt; Käyttäjän salasanan palautus (2. vaihe). $auth-&gt;getAccountManager()-&gt;finalizePasswordReset( 'pitkä-random-merkkijono', 'e@mail.com', 'newPassword'); . ",
+    "content": "requestNewAccount() . Luo uuden ei-aktivoidun tilin tietokantaan. Signature . public function requestNewAccount ( string $username, string $email, string $password, callable $makeEmailSettings, int $role = ACL::ROLE_LAST ) : string . Esimerkit . Katso myös Autentikaatio &gt; Käyttäjän luominen (1. vaihe). $insertId = $auth-&gt;getAccountManager()-&gt;requestNewAccount( 'user', 'e@mail.com', 'pass', function (\\Pike\\Entities\\User $user, string $activationKey, object $settings ) : void { // ... }, \\Pike\\Auth\\ACL::ROLE_CONTRIBUTOR); . activateAccount() . Aktivoi tietokantaan insertoidun ei-aktivoidun tilin. Signature . public function activateAccount ( string $activationKey ) : void . Esimerkit . Katso myös Autentikaatio &gt; Käyttäjän aktivoiminen (2. vaihe). $auth-&gt;getAccountManager()-&gt;activateAccount('pitkä-random-merkkijono'); . requestPasswordReset() . Asettaa tilin salasanan palautustilaan. Signature . public function requestPasswordReset ( string $usernameOrEmail, callable $makeEmailSettings ) : void . Esimerkit . Katso myös Autentikaatio &gt; Käyttäjän salasanan palautus (1. vaihe). $auth-&gt;getAccountManager()-&gt;requestPasswordReset( 'e@mail.com', function (\\Pike\\Entities\\User $user, string $resetKey, object $settings ) : void { // ... }, new \\Pike\\PhpMailerMailer); . finalizePasswordReset() . Asettaa tilille uuden salasanan, ja palauttaa sen salasanan palautustilasta. Signature . public function finalizePasswordReset ( string $key, string $newPassword ) : void . Esimerkit . Katso myös Autentikaatio &gt; Käyttäjän salasanan palautus (2. vaihe). $auth-&gt;getAccountManager()-&gt;finalizePasswordReset( 'pitkä-random-merkkijono', 'newPassword'); . ",
     "url": "https://ut4.github.io/pike/api/auth/pike_auth_account-manager.html#metodit",
     "relUrl": "/api/auth/pike_auth_account-manager.html#metodit"
-  },"108": {
+  },"107": {
     "doc": "Pike&bsol;Auth&bsol;AccountManager",
     "title": "Pike&bsol;Auth&bsol;AccountManager",
     "content": " ",
     "url": "https://ut4.github.io/pike/api/auth/pike_auth_account-manager.html",
     "relUrl": "/api/auth/pike_auth_account-manager.html"
-  },"109": {
+  },"108": {
     "doc": "Pike&bsol;Auth&bsol;ACL",
     "title": "class Pike\\Auth\\ACL",
     "content": "Piken Access Contrl List -implementaatio. Katso myös Käyttäjäroolit ja oikeudet. ",
     "url": "https://ut4.github.io/pike/api/auth/pike_auth_acl.html#class-pikeauthacl",
     "relUrl": "/api/auth/pike_auth_acl.html#class-pikeauthacl"
-  },"110": {
+  },"109": {
     "doc": "Pike&bsol;Auth&bsol;ACL",
     "title": "Synopsis",
     "content": "class ACL { /* Vakiot */ const ROLE_SUPER_ADMIN = 1 &lt;&lt; 0 ; const ROLE_EDITOR = 1 &lt;&lt; 1 ; const ROLE_AUTHOR = 1 &lt;&lt; 2 ; const ROLE_CONTRIBUTOR = 1 &lt;&lt; 3 ; const ROLE_LAST = 1 &lt;&lt; 23 ; const ROLE_VIEWER = self::ROLE_LAST ; const NO_PERMISSIONS = 0 ; /* Metodit */ public __construct ( bool $doThrowDevWarnings = false ) public setRules ( stdClass $compactRules ) : void public can ( int $role, string $action, string $resource ) : bool public static makePermissions ( array|string $allowedActions, stdClass $resourceActions ) : int } . ",
     "url": "https://ut4.github.io/pike/api/auth/pike_auth_acl.html#synopsis",
     "relUrl": "/api/auth/pike_auth_acl.html#synopsis"
-  },"111": {
+  },"110": {
     "doc": "Pike&bsol;Auth&bsol;ACL",
     "title": "Metodit",
     "content": "__construct() . Lue uuden ACL-olion. Signature . public function __construct ( bool $doThrowDevWarnings = false ) . Esimerkit . $acl = new ACL(false); $acl-&gt;can(ACL::ROLE_EDITOR, 'ei-olemassa', 'ei-olemassa'); // false $acl = new ACL(true); $acl-&gt;can(ACL::ROLE_EDITOR, 'ei-olemassa', 'ei-olemassa'); // heittää PikeExceptionin . setRules() . Asettaa ACL-säännöt, roolit ja oikeudet. Signature . public function setRules ( stdClass $compactRules ) : void . Esimerkit . $acl-&gt;setRules((object) ['resources' =&gt; ..., 'userPermissions' =&gt; ...]); . can() . Kertoo onko käyttäjällä ($role) oikeus suorittaa aie ($action) resursissa $resource. Mikäli roolia, resurssia, tai aietta ei löydy, palauttaa aina false. Mikäli $role === Acl::ROLE_SUPER_ADMIN, palauttaa aina true. Signature . public function can ( int $role, string $action, string $resource ) : bool . Esimerkit . $hasPermission = $acl-&gt;can(ACL::ROLE_AUTHOR, 'edit', 'posts'); . makePermissions() . Luo arvoja setRules()-metodille tarjoiltavaa oliota varten. Signature . public static function makePermissions ( array|string $allowedActions, stdClass $resourceActions ) : int . Esimerkit . $perms = ACL::makePermissions('*', ...); . ",
     "url": "https://ut4.github.io/pike/api/auth/pike_auth_acl.html#metodit",
     "relUrl": "/api/auth/pike_auth_acl.html#metodit"
-  },"112": {
+  },"111": {
     "doc": "Pike&bsol;Auth&bsol;ACL",
     "title": "Pike&bsol;Auth&bsol;ACL",
     "content": " ",
     "url": "https://ut4.github.io/pike/api/auth/pike_auth_acl.html",
     "relUrl": "/api/auth/pike_auth_acl.html"
-  },"113": {
+  },"112": {
     "doc": "Pike&bsol;Auth&bsol;Authenticator",
     "title": "class Pike\\Auth\\Authenticator",
     "content": "Autentikaation ja käyttäjänhallinnan julkinen API. ",
     "url": "https://ut4.github.io/pike/api/auth/pike_auth_authenticator.html#class-pikeauthauthenticator",
     "relUrl": "/api/auth/pike_auth_authenticator.html#class-pikeauthauthenticator"
-  },"114": {
+  },"113": {
     "doc": "Pike&bsol;Auth&bsol;Authenticator",
     "title": "Synopsis",
     "content": "class Authenticator { /* Vakiot */ const ACTIVATION_KEY_EXPIRATION_SECS = 60 * 60 * 24 ; const RESET_KEY_EXPIRATION_SECS = 60 * 60 * 2 ; const ACCOUNT_STATUS_ACTIVATED = 0 ; const ACCOUNT_STATUS_UNACTIVATED = 1 ; const ACCOUNT_STATUS_BANNED = 2 ; const CREDENTIAL_WAS_INVALID = 201010 ; const USER_ALREADY_EXISTED = 201011 ; const FAILED_TO_FORMAT_MAIL = 201012 ; const FAILED_TO_SEND_MAIL = 201013 ; const KEY_HAD_EXPIRED = 201014 ; const ACCOUNT_STATUS_WAS_UNEXPECTED = 201015 ; /* Metodit */ public __construct ( callable $makeUserRepositoryFn, callable $makeSessionFn, callable $makeCookieStorageFn, string $userRoleCookieName = 'maybeLoggedInUserRole', bool $doUseRememberMe = true ) public login ( string $usernameOrEmail, string $password, ?callable $convertUserToSessionData = null ) : void public loginByUserId ( string $userId, ?callable $convertUserToSessionData = null ) : void public getIdentity ( void ) : mixed|null public logout ( void ) : void public getAccountManager( ?callable $makeMailerFn = null ) : AccountManager } . ",
     "url": "https://ut4.github.io/pike/api/auth/pike_auth_authenticator.html#synopsis",
     "relUrl": "/api/auth/pike_auth_authenticator.html#synopsis"
-  },"115": {
+  },"114": {
     "doc": "Pike&bsol;Auth&bsol;Authenticator",
     "title": "Metodit",
     "content": "__construct() . Luo uuden autentikaatio-API:n. Signature . public function __construct ( callable $makeUserRepositoryFn, callable $makeSessionFn, callable $makeCookieStorageFn, string $userRoleCookieName = 'maybeLoggedInUserRole', bool $doUseRememberMe = true ) . Esimerkit . $myCookieName = 'userRole'; $doUseRememberMe = true; $auth = new Authenticator( function ($_factory): \\Pike\\Interfaces\\UserRepositoryInterface { return new MyUserRepository(); }, function ($_factory): \\Pike\\Interfaces\\SessionInterface { return new MySession(); }, function ($_factory): \\Pike\\Auth\\Interfaces\\CookieStorageInterface { return new MyCookieStorage(); }, $myCookieName, $doUseRememberMe ); . login() . Kirjaa käyttäjän: . | Sessioon | Istunnon ajaksi kekseihin (jos konstruktorin $userRoleCookieName != ‘’) | Tietokantaan ja kekseihin (jos konstruktorin $useRememberMe = true) | . Signature . public function login ( string $usernameOrEmail, string $password, ?callable $convertUserToSessionData = null ) : void . Esimerkit . Katso myös Autentikaatio &gt; Käyttäjän kirjaaminen sisään. $authenticator-&gt;login('user', 'pass', function (\\Pike\\Entities\\User $user) { return (object) ['id' =&gt; $user-&gt;id, 'role' =&gt; $user-&gt;role]; }); . loginByUserId() . Tekee saman kuin login(), mutta ei tarkasta salasanaa. Käytetään silloin, kun tunnistautuminen on jo suoritettu (kolmannen osapuolen autentikointitavat, esim. Facebook Login), ja käyttäjä halutaan vain kirjata sessioon. Signature . public function loginByUserId ( string $userId, ?callable $convertUserToSessionData = null ) : void . Esimerkit . $otherAuth = (new Hybridauth([/*...*/]))-&gt;getAdapter('facebook'); if (!$otherAuth-&gt;authenticate()) return 'You shall not pass'; if (!($user = $myUserRepo-&gt;getUser($otherAuth-&gt;getUserProfile()-&gt;email))) return 'User not recognized'; $authenticator-&gt;loginByUserId($user-&gt;id, function (\\Pike\\Entities\\User $user) { return (object) ['id' =&gt; $user-&gt;id, 'role' =&gt; $user-&gt;role]; }); . getIdentity() . Palauttaa sessioon tallennetut kirjautumistiedot. Mikäli käyttäjää ei löydy sessiosta (ja $useRememberMe = true), yrittää hakea tiedot kekseistä. Jos tietoja ei löydy yhtään mistään, palauttaa null. Signature . public function getIdentity ( void ) : mixed|null . Esimerkit . Katso myös Autentikaatio &gt; Käyttäjän kirjautumistietojen haku. $myDataFromSession = $authenticator-&gt;getIdentity(); . logout() . Poistaa: . | Sessioon tallennetut tiedot | Kekseihin tallennetut tiedot (jos konstruktorin $userRoleCookieName != ‘’) | RememberMe-toiminnallisuuden tallentamat tiedot kekseistä ja tietokannasta (jos konstruktorin $useRememberMe = true) | . Signature . public function logout ( void ) : void . Esimerkit . Katso myös Autentikaatio &gt; Käyttäjän kirjaaminen ulos. $authenticator-&gt;logout(); . getAccountManager() . Palauttaa käyttäjänhallintatoiminnallisuuksien APIn, ks. Pike\\Auth\\AccountManager. Signature . public function getAccountManager( ?callable $makeMailerFn = null ) : AccountManager . Esimerkit . $accountManager = $auth-&gt;getAccountManager(function (): \\Pike\\Interfaces\\MailerInterface { return new \\Pike\\PhpMailerMailer; }); . ",
     "url": "https://ut4.github.io/pike/api/auth/pike_auth_authenticator.html#metodit",
     "relUrl": "/api/auth/pike_auth_authenticator.html#metodit"
-  },"116": {
+  },"115": {
     "doc": "Pike&bsol;Auth&bsol;Authenticator",
     "title": "Pike&bsol;Auth&bsol;Authenticator",
     "content": " ",
     "url": "https://ut4.github.io/pike/api/auth/pike_auth_authenticator.html",
     "relUrl": "/api/auth/pike_auth_authenticator.html"
-  },"117": {
+  },"116": {
     "doc": "Pike&bsol;Auth&bsol;Crypto",
     "title": "class Pike\\Auth\\Crypto",
     "content": "Abstraktoi php:n omat krypto-funktiot kuten password_hash() ja sodium_crypto_secretbox(). ",
     "url": "https://ut4.github.io/pike/api/auth/pike_auth_crypto.html#class-pikeauthcrypto",
     "relUrl": "/api/auth/pike_auth_crypto.html#class-pikeauthcrypto"
-  },"118": {
+  },"117": {
     "doc": "Pike&bsol;Auth&bsol;Crypto",
     "title": "Synopsis",
     "content": "class Crypto { /* Vakiot */ const SECRETBOX_KEYBYTES = SODIUM_CRYPTO_SECRETBOX_KEYBYTES ; // 32 /* Metodit */ public hashPass ( string $plainPass ) : string public verifyPass ( string $plainPass, string $hashedPass ) : bool public hash ( string $algo, string $data, bool $useRawOutput = false ) : string public guidv4 ( void ) : string public genRandomToken ( int $bytes = 16 ) : string public encrypt ( string $plainStr, string $key ) : string public decrypt ( string $encodedStr, string $key ) : string } . ",
     "url": "https://ut4.github.io/pike/api/auth/pike_auth_crypto.html#synopsis",
     "relUrl": "/api/auth/pike_auth_crypto.html#synopsis"
-  },"119": {
+  },"118": {
     "doc": "Pike&bsol;Auth&bsol;Crypto",
     "title": "Vakiot",
     "content": "SECRETBOX_KEYBYTES encrypt|decrypt() avaimen pituus, tavua. ",
     "url": "https://ut4.github.io/pike/api/auth/pike_auth_crypto.html#vakiot",
     "relUrl": "/api/auth/pike_auth_crypto.html#vakiot"
-  },"120": {
+  },"119": {
     "doc": "Pike&bsol;Auth&bsol;Crypto",
     "title": "Metodit",
-    "content": "hashPass() . Ks. password_hash(). Signature . public function hashPass ( string $plainPass ) : string . Esimerkit . $hashed = $crypto-&gt;hashPass('salasana'); . verifyPass() . Ks. password_verify(). Signature . public function verifyPass ( string $plainPass, string $hashedPass ) : bool . Esimerkit . $ok = $crypto-&gt;verifyPass('salasana', 'hashattu-salasana'); . hash() . Ks. hash(). Signature . public function hash ( string $algo, string $data, bool $useRawOutput = false ) : string . Esimerkit . $hashed = $crypto-&gt;hash('sha256', 'merkkijono'); $hashed = $crypto-&gt;hash('non-existing-algo', 'merkkijono'); // Heittää poikkeuksen . guidv4() . Luo uuden UUID:n. Signature . public function guidv4 ( void ) : string . Esimerkit . $uuid = $crypto-&gt;guidv4(); . genRandomToken() . Luo satunnaisen merkkijonon, ks. random_bytes(). Signature . public function genRandomToken ( int $bytes = 16 ) : string . Esimerkit . $randomString = $crypto-&gt;genRandomToken(32); . encrypt() . Enkryptoi merkkijonon tai heittää PikeExceptionin mikäli se ei onnistunut. Ks. sodium_crypto_secretbox(). strlen($key) tulee olla tasan Crypto::SECRETBOX_KEYBYTES (32). Signature . public function encrypt ( string $plainStr, string $key ) : string . Esimerkit . $encryptedString = $crypto-&gt;encrypt('plain', 'merkkijono'); . decrypt() . Verifioi ja dekryptoi merkkijonon tai heittää PikeExceptionin mikäli se ei onnistunut. Ks. sodium_crypto_secretbox_open(). strlen($key) tulee olla tasan Crypto::SECRETBOX_KEYBYTES (32). Signature . public function decrypt ( string $encodedStr, string $key ) : string . Esimerkit . $plainString = $crypto-&gt;decrypt('encoded', 'merkkijono'); . ",
+    "content": "hashPass() . Ks. password_hash(). Signature . public function hashPass ( string $plainPass ) : string . Esimerkit . $hashed = $crypto-&gt;hashPass('salasana'); . verifyPass() . Ks. password_verify(). Signature . public function verifyPass ( string $plainPass, string $hashedPass ) : bool . Esimerkit . $ok = $crypto-&gt;verifyPass('salasana', 'hashattu-salasana'); . hash() . Ks. hash(). Signature . public function hash ( string $algo, string $data, bool $useRawOutput = false ) : string . Esimerkit . $hashed = $crypto-&gt;hash('sha256', 'merkkijono'); $hashed = $crypto-&gt;hash('non-existing-algo', 'merkkijono'); // Heittää poikkeuksen . guidv4() . Luo uuden UUID:n. Signature . public function guidv4 ( void ) : string . Esimerkit . $uuid = $crypto-&gt;guidv4(); . genRandomToken() . Luo satunnaisen merkkijonon, ks. random_bytes(). Signature . public function genRandomToken ( int $bytes = 16 ) : string . Esimerkit . $randomString = $crypto-&gt;genRandomToken(32); . encrypt() . Enkryptoi merkkijonon. Ks. sodium_crypto_secretbox(). strlen($key) tulee olla tasan Crypto::SECRETBOX_KEYBYTES (32). Signature . public function encrypt ( string $plainStr, string $key ) : string . Esimerkit . $encryptedString = $crypto-&gt;encrypt('plain', 'merkkijono'); . decrypt() . Verifioi ja dekryptoi merkkijonon. Ks. sodium_crypto_secretbox_open(). strlen($key) tulee olla tasan Crypto::SECRETBOX_KEYBYTES (32). Signature . public function decrypt ( string $encodedStr, string $key ) : string . Esimerkit . $plainString = $crypto-&gt;decrypt('encoded', 'merkkijono'); . ",
     "url": "https://ut4.github.io/pike/api/auth/pike_auth_crypto.html#metodit",
     "relUrl": "/api/auth/pike_auth_crypto.html#metodit"
-  },"121": {
+  },"120": {
     "doc": "Pike&bsol;Auth&bsol;Crypto",
     "title": "Pike&bsol;Auth&bsol;Crypto",
     "content": " ",
     "url": "https://ut4.github.io/pike/api/auth/pike_auth_crypto.html",
     "relUrl": "/api/auth/pike_auth_crypto.html"
-  },"122": {
+  },"121": {
     "doc": "Pike&bsol;Auth&bsol;Interfaces&bsol;CookieStorageInterface",
     "title": "interface Pike\\Auth\\Interfaces\\CookieStorageInterface",
     "content": "Rajapinta autentikaattorin käyttämille keksiluokille. ",
     "url": "https://ut4.github.io/pike/api/auth/interfaces/pike_auth_interfaces-cookie-storage-interface.html#interface-pikeauthinterfacescookiestorageinterface",
     "relUrl": "/api/auth/interfaces/pike_auth_interfaces-cookie-storage-interface.html#interface-pikeauthinterfacescookiestorageinterface"
-  },"123": {
+  },"122": {
     "doc": "Pike&bsol;Auth&bsol;Interfaces&bsol;CookieStorageInterface",
     "title": "Synopsis",
     "content": "interface CookieStorageInterface { /* Metodit */ public getCookie ( string $name ) : ?string public storeCookie ( string $cookieString ) : void } . ",
     "url": "https://ut4.github.io/pike/api/auth/interfaces/pike_auth_interfaces-cookie-storage-interface.html#synopsis",
     "relUrl": "/api/auth/interfaces/pike_auth_interfaces-cookie-storage-interface.html#synopsis"
-  },"124": {
+  },"123": {
     "doc": "Pike&bsol;Auth&bsol;Interfaces&bsol;CookieStorageInterface",
     "title": "Pike&bsol;Auth&bsol;Interfaces&bsol;CookieStorageInterface",
     "content": " ",
     "url": "https://ut4.github.io/pike/api/auth/interfaces/pike_auth_interfaces-cookie-storage-interface.html",
     "relUrl": "/api/auth/interfaces/pike_auth_interfaces-cookie-storage-interface.html"
-  },"125": {
+  },"124": {
     "doc": "Pike&bsol;Db",
     "title": "class Pike\\Db",
     "content": "Piken tietokanta-, ja tietokantakyselyjen rakentajaluokka. Handlaa vain yhtä tietokantayhteyttä kerrallaan, tukee toistaiseksi vain MySQL / MariaDB -ajuria. ",
     "url": "https://ut4.github.io/pike/api/pike_db.html#class-pikedb",
     "relUrl": "/api/pike_db.html#class-pikedb"
-  },"126": {
+  },"125": {
     "doc": "Pike&bsol;Db",
     "title": "Synopsis",
     "content": "class Db { /* Metodit */ public __construct ( object|array&lt;string, mixed&gt; $config ) public open ( void ) : bool public fetchAll ( string $query, mixed[] $params = null, ...$fetchConfig ) : mixed[] public fetchOne ( string $query, mixed[] $params = null, ...$fetchConfig ) : object|array&lt;string, mixed&gt;|null public exec ( string $query, mixed[] $params = null ) : int public beginTransaction ( void ) : int public commit ( void ) : int public rollBack ( void ) : int public runInTransaction ( Closure $fn ) : mixed public lastInsertId ( void ) : string public attr ( int $attr, mixed $value = null ) : mixed|bool public setConfig ( object|array&lt;string, mixed&gt; $config ) : void public static makeInsertQParts ( object|array&lt;string, mixed&gt; $data, string[] $columnsToInclude = [] ) : array public static makeBatchInsertQParts ( array&lt;int, object|array&lt;string, mixed&gt;&gt; $data, string[] $columnsToInclude = [] ) : array public static makeUpdateQParts ( object|array&lt;string, mixed&gt; $data, string[] $columnsToInclude = [] ) : array public static columnify ( string $columnNameCandidate ) : string } . ",
     "url": "https://ut4.github.io/pike/api/pike_db.html#synopsis",
     "relUrl": "/api/pike_db.html#synopsis"
-  },"127": {
+  },"126": {
     "doc": "Pike&bsol;Db",
     "title": "Metodit",
     "content": "__construct() . Luo uuden tietokantaolion ja asettaa tietokantayhteyden avaamisessa käytettävän konfiguraation. Yhteys tulee avata erikseen metodilla open(). Signature . public function __construct ( object|array&lt;string, mixed&gt; $config ) . Esimerkit . Katso myös Tietokanta &gt; Käyttöönotto. $db = new Db(['db.host' =&gt; '127.0.0.1', 'db.user' =&gt; 'user']); . open() . Avaa tietokantayhteyden, tai heittää PikeExceptionin mikäli se ei onnistunut. Signature . public function open ( void ) : bool . Esimerkit . Katso myös Tietokanta &gt; Käyttöönotto. $ok = $db-&gt;open(); . fetchAll() . Hakee useita rivejä tietokannasta, tai heittää PikeExceptionin. Signature . public function fetchAll ( string $query, mixed[] $params = null, ...$fetchConfig ) : mixed[] . Esimerkit . Katso myös. Tietokanta &gt; Datan hakeminen. $q = 'SELECT * FROM `foo` WHERE `id` &lt; ?'; $assocs = $db-&gt;fetchAll($q, ['10']); $instances = $db-&gt;fetchAll($q, ['10'], PDO::FETCH_CLASS, MyClass::class); . fetchOne() . Hakee yhden rivin tietokannasta, tai heittää PikeExceptionin. Signature . public function fetchOne ( string $query, mixed[] $params = null, ...$fetchConfig ) : object|array&lt;string, mixed&gt;|null . Esimerkit . Katso myös. Tietokanta &gt; Datan hakeminen. $q = 'SELECT * FROM `foo` WHERE `id` = ?'; $assoc = $db-&gt;fetchOne($q, ['1']); $instance = $db-&gt;fetchOne($q, ['1'], PDO::FETCH_CLASS, MyClass::class); . exec() . Ajaa preparoidun tietokantakyselyn ja palauttaa sen tuloksena muuntuneiden rivien lukumäärän (rowCount), tai heittää PikeExceptionin. Signature . public function exec ( string $query, mixed[] $params = null ) : int . Esimerkit . Katso myös: . | Tietokanta &gt; Datan insertointi. | Tietokanta &gt; Datan päivittäminen. | Tietokanta &gt; Datan poistaminen. | . $numAffectedRows = $db-&gt;exec('INSERT INTO `foo` VALUES (?, ?)', ['1', 'foo']); $numAffectedRows = $db-&gt;exec('UPDATE `foo` SET `field1` = ? WHERE `id` = ?', ['foo', '1']); . beginTransaction() . Aloittaa transaktion, tai ei tee mitään mikäli sellainen oli jo aloitettu. Signature . public function beginTransaction ( void ) : int . Esimerkit . $db-&gt;beginTransaction(); . commit() . Hyväksyy uloimman transaktion (transaktio, joka aloitetaan ensimmäisenä) jälkeen suoritetut tietokantaoperaatiot, tai ei tee mitään mikäli transaktio ei ollut ulommainen. Signature . public function commit ( void ) : int . Esimerkit . $db-&gt;commit(); . rollBack() . Kumoaa uloimman transaktion (transaktio, joka aloitetaan ensimmäisenä) jälkeen suoritetut tietokantaoperaatiot, tai ei tee mitään mikäli transaktio ei ollut ulommainen. Signature . public function rollBack ( void ) : int . Esimerkit . $db-&gt;rollBack(); . runInTransaction() . Ajaa funktion transaktiossa. Signature . public function runInTransaction ( Closure $fn ) : mixed . Esimerkit . $myValue = $db-&gt;runInTransaction(function () use ($db) { $db-&gt;exec(...); $db-&gt;exec(...); return 'my-value'; }); . lastInsertId() . Ks. PDO-&gt;lastInsertId(). Signature . public function lastInsertId ( void ) : string . Esimerkit . $id = $db-&gt;lastInsertId(); . attr() . Palauttaa tai asettaa tietokantayhteys-attribuutin. Signature . public function attr ( int $attr, mixed $value = null ) : mixed|bool . Esimerkit . Katso myös: . | PDO-&gt;getAttribute() | PDO-&gt;setAttribute() | . $db-&gt;attr(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION); $errMode = $db-&gt;attr(PDO::ATTR_ERRMODE); . setConfig() . Asettaa tietokantayhteyden avaamisessa käytettävän konfiguraation. Signature . public function setConfig ( object|array&lt;string, mixed&gt; $config ) : void . Esimerkit . $db-&gt;setConfig(['db.host' =&gt; '127.0.0.1', 'db.user' =&gt; 'user']); . makeInsertQParts() . Luo komponentit yhden rivin INSERT-kyselyä varten. Signature . public static function makeInsertQParts ( object|array&lt;string, mixed&gt; $data, string[] $columnsToInclude = [] ) : array . Esimerkit . Katso myös Tietokanta &gt; Datan insertointi. [$qList, $values, $columns] = $db-&gt;makeInsertQParts(['field' =&gt; 'value', 'field2' =&gt; 'value2']); $db-&gt;exec(\"INSERT INTO `foo` ({$columns}) VALUES ({$qList})\", $values); . makeBatchInsertQParts() . Luo komponentit useamman rivin INSERT-kyselyä varten. Signature . public static function makeBatchInsertQParts ( array&lt;int, object|array&lt;string, mixed&gt;&gt; $data, string[] $columnsToInclude = [] ) : array . Esimerkit . Katso myös Tietokanta &gt; Datan insertointi. [$qGroups, $values, $columns] = $db-&gt;makeBatchInsertQParts([ ['field' =&gt; 'value1'], ['field' =&gt; 'value2'], ]); $db-&gt;exec(\"INSERT INTO `foo` ({$columns}) VALUES {$qGroups}\", $values); . makeUpdateQParts() . Luo komponentit UPDATE-kyselyä varten. Signature . public static function makeUpdateQParts ( object|array&lt;string, mixed&gt; $data, string[] $columnsToInclude = [] ) : array . Esimerkit . Katso myös Tietokanta &gt; Datan päivittäminen. [$columns, $values] = $db-&gt;makeUpdateQParts(['field' =&gt; 'value']); $db-&gt;exec(\"UPDATE `foo` SET {$columns} WHERE `id` = ?\", array_merge($values, ['1'])); . columnify() . Palauttaa merkkijonon, jota voi turvallisesti käyttää mm. SQL-taulun sarakkeen nimenä. Signature . public static function columnify ( string $columnNameCandidate ) : string . Esimerkit . $columnified = $db-&gt;columnify('DROP table users'); // '`DROPtableusers`' . ",
     "url": "https://ut4.github.io/pike/api/pike_db.html#metodit",
     "relUrl": "/api/pike_db.html#metodit"
-  },"128": {
+  },"127": {
     "doc": "Pike&bsol;Db",
     "title": "Pike&bsol;Db",
     "content": " ",
     "url": "https://ut4.github.io/pike/api/pike_db.html",
     "relUrl": "/api/pike_db.html"
-  },"129": {
+  },"128": {
     "doc": "Pike&bsol;Defaults&bsol;DefaultUserRepository",
     "title": "class Pike\\Defaults\\DefaultUserRepository",
     "content": "Oletusimplementaatio jota Pike\\Auth\\Authenticator käyttää pitkäaikaiseen tiedon tallennukseen. ",
     "url": "https://ut4.github.io/pike/api/defaults/pike_defaults_default-user-repository.html#class-pikedefaultsdefaultuserrepository",
     "relUrl": "/api/defaults/pike_defaults_default-user-repository.html#class-pikedefaultsdefaultuserrepository"
-  },"130": {
+  },"129": {
     "doc": "Pike&bsol;Defaults&bsol;DefaultUserRepository",
     "title": "Synopsis",
     "content": "class DefaultUserRepository implements UserRepositoryInterface { /* Metodit */ public createUser ( User $user ) : string public getUserByColumn ( string $column, string $value) : ?User public updateUserByUserId ( User $user, string[] $fields, string $userId ) : int public deleteUserByUserId ( string $userId ) : int public runInTransaction ( Closure $fn ) : mixed } . ",
     "url": "https://ut4.github.io/pike/api/defaults/pike_defaults_default-user-repository.html#synopsis",
     "relUrl": "/api/defaults/pike_defaults_default-user-repository.html#synopsis"
-  },"131": {
+  },"130": {
     "doc": "Pike&bsol;Defaults&bsol;DefaultUserRepository",
     "title": "Metodit",
-    "content": "createUser() . Insertoi uuden käyttäjän lokaaliin tietokantaan. Signature . public function createUser ( User $user ) : string . Esimerkit . $user = new \\Pike\\Entities\\User; $user-&gt;id = (new \\Pike\\Auth\\Crypto)-&gt;guidv4(); $user-&gt;username = 'username'; $user-&gt;email = 'e@mail.com'; $user-&gt;accountStatus = Authenticator::ACCOUNT_STATUS_UNACTIVATED; $user-&gt;passwordHash = (new \\Pike\\Auth\\Crypto)-&gt;hashPass($password); $user-&gt;role = \\Pike\\Auth\\ACL::ROLE_AUTHOR; $user-&gt;activationKey = (new \\Pike\\Auth\\Crypto)-&gt;genRandomToken(32); $user-&gt;accountCreatedAt = time(); $insertId = $userRepository-&gt;createUser($user); . getUserByColumn() . Palauttaa käyttäjän lokaalista tietokannasta. Signature . public function getUserByColumn ( string $column, string $value) : ?User . Esimerkit . $username = 'username'; $user = $userRepository-&gt;getUserByColumn('username', $username); . updateUserByUserId() . Päivittää käyttäjän tiedot lokaaliin tietokantaan. Signature . public function updateUserByUserId ( User $user, string[] $fields, string $userId ) : int . Esimerkit . $user = new \\Pike\\Entities\\User; $user-&gt;email = 'e@mail2.com'; $user-&gt;displayName = 'username'; $numAffectedRows = $userRepository-&gt;updateUserByUserId($user, ['email', 'displayName'], '&lt;some-id&gt;'); . deleteUserByUserId() . Poistaa käyttäjän lokaalista tietokannasta. Signature . public function deleteUserByUserId ( string $userId ) : int . Esimerkit . $numAffectedRows = $userRepository-&gt;deleteUserByUserId('&lt;some-id&gt;'); . runInTransaction() . Ks. Db-&gt;runInTransaction(). Signature . public function runInTransaction ( Closure $fn ) : mixed . ",
+    "content": "createUser() . Insertoi uuden käyttäjän lokaaliin tietokantaan. Signature . public function createUser ( User $user ) : string . Esimerkit . $user = new \\Pike\\Entities\\User; $user-&gt;id = (new \\Pike\\Auth\\Crypto)-&gt;guidv4(); $user-&gt;username = 'username'; $user-&gt;email = 'e@mail.com'; $user-&gt;accountStatus = Authenticator::ACCOUNT_STATUS_UNACTIVATED; $user-&gt;passwordHash = (new \\Pike\\Auth\\Crypto)-&gt;hashPass($password); $user-&gt;role = \\Pike\\Auth\\ACL::ROLE_AUTHOR; $user-&gt;activationKey = (new \\Pike\\Auth\\Crypto)-&gt;genRandomToken(32); $user-&gt;accountCreatedAt = time(); $insertId = $userRepository-&gt;createUser($user); . getUserByColumn() . Palauttaa käyttäjän lokaalista tietokannasta, tai null. Signature . public function getUserByColumn ( string $column, string $value) : ?User . Esimerkit . $username = 'username'; $user = $userRepository-&gt;getUserByColumn('username', $username); . updateUserByUserId() . Päivittää käyttäjän tiedot lokaaliin tietokantaan, tai palauttaa 0. Signature . public function updateUserByUserId ( User $user, string[] $fields, string $userId ) : int . Esimerkit . $user = new \\Pike\\Entities\\User; $user-&gt;email = 'e@mail2.com'; $user-&gt;displayName = 'username'; $numAffectedRows = $userRepository-&gt;updateUserByUserId($user, ['email', 'displayName'], '&lt;some-id&gt;'); . deleteUserByUserId() . Poistaa käyttäjän lokaalista tietokannasta, tai palauttaa 0. Signature . public function deleteUserByUserId ( string $userId ) : int . Esimerkit . $numAffectedRows = $userRepository-&gt;deleteUserByUserId('&lt;some-id&gt;'); . runInTransaction() . Ks. Db-&gt;runInTransaction(). Signature . public function runInTransaction ( Closure $fn ) : mixed . ",
     "url": "https://ut4.github.io/pike/api/defaults/pike_defaults_default-user-repository.html#metodit",
     "relUrl": "/api/defaults/pike_defaults_default-user-repository.html#metodit"
-  },"132": {
+  },"131": {
     "doc": "Pike&bsol;Defaults&bsol;DefaultUserRepository",
     "title": "Pike&bsol;Defaults&bsol;DefaultUserRepository",
     "content": " ",
     "url": "https://ut4.github.io/pike/api/defaults/pike_defaults_default-user-repository.html",
     "relUrl": "/api/defaults/pike_defaults_default-user-repository.html"
-  },"133": {
+  },"132": {
     "doc": "Pike&bsol;Entities&bsol;User",
     "title": "class Pike\\Entities\\User",
     "content": " ",
     "url": "https://ut4.github.io/pike/api/entities/pike_entities_user.html#class-pikeentitiesuser",
     "relUrl": "/api/entities/pike_entities_user.html#class-pikeentitiesuser"
-  },"134": {
+  },"133": {
     "doc": "Pike&bsol;Entities&bsol;User",
     "title": "Synopsis",
     "content": "class User { /* Muuttujat */ public string $id; public string $username; public string $email; public ?int $accountStatus; public ?string $displayName; public ?int $role; public ?int $accountCreatedAt; public string $passwordHash; public ?string $activationKey; public ?string $resetKey; public ?int $resetRequestedAt; public ?string $loginId; public ?string $loginIdValidatorHash; public ?string $loginData; } . ",
     "url": "https://ut4.github.io/pike/api/entities/pike_entities_user.html#synopsis",
     "relUrl": "/api/entities/pike_entities_user.html#synopsis"
-  },"135": {
+  },"134": {
     "doc": "Pike&bsol;Entities&bsol;User",
     "title": "Muuttujat",
     "content": "id Käyttäjän id, esim. uuid tai kokonaisluku username Käyttäjän käyttäjänimi email Käyttäjän sähköposti accountStatus Käyttäjätilin status, esim. aktiivinen, bannattu displayName Käyttäjän koko nimi role Käyttäjän rooli, esim. ACL::ROLE_AUTHOR accountCreatedAt Käyttäjän luontiaika, unix time passwordHash Käyttäjän hashattu salasana activationKey Tilin aktivointiavain, käytössä tilin luontivaiheessa resetKey Tilin resetointiavain, käytössä tilin palautustilassa resetRequestedAt Tilin palautustilan pyyntöaika, unix time loginId Rememberme:n asettama kirjautumistunniste loginIdValidatorHash Kirjautumistunnisteen verifiointitokeni loginData RememberMe:n asettama kirjautumisdata ",
     "url": "https://ut4.github.io/pike/api/entities/pike_entities_user.html#muuttujat",
     "relUrl": "/api/entities/pike_entities_user.html#muuttujat"
-  },"136": {
+  },"135": {
     "doc": "Pike&bsol;Entities&bsol;User",
     "title": "Pike&bsol;Entities&bsol;User",
     "content": " ",
     "url": "https://ut4.github.io/pike/api/entities/pike_entities_user.html",
     "relUrl": "/api/entities/pike_entities_user.html"
-  },"137": {
+  },"136": {
     "doc": "Pike&bsol;FileSystem",
     "title": "class Pike\\FileSystem",
     "content": "Abstraktoi php:n omat tiedostonhallintafunktiot. ",
     "url": "https://ut4.github.io/pike/api/pike_file-system.html#class-pikefilesystem",
     "relUrl": "/api/pike_file-system.html#class-pikefilesystem"
-  },"138": {
+  },"137": {
     "doc": "Pike&bsol;FileSystem",
     "title": "Synopsis",
     "content": "class FileSystem implements FileSystemInterface { /* Metodit */ public write ( string $path, string $content ) : int|false public read ( string $path ) : string|false public unlink ( string $path ) : bool public copy ( string $path, string $destPath ) : bool public rename ( string $oldPath, string $newPath ) : string|false public move ( string $oldPath, string $newPath ) : bool public mkDir ( string $path, int $perms = 0755, bool $recursive = true ) : bool public rmDir ( string $path, $context = null ) : bool public isFile ( string $path ) : bool public isDir ( string $path ) : bool public readDir ( string $path, string $filterPattern = '*', int $flags = GLOB_ERR ) : string[]|false public readDirRecursive ( string $path, string $filterRegexp = '/.*/', int $flags = FilesystemIterator::CURRENT_AS_PATHNAME ) : mixed[] public lastModTime ( string $path ) : int|false public static normalizePath ( string $path ) : string } . ",
     "url": "https://ut4.github.io/pike/api/pike_file-system.html#synopsis",
     "relUrl": "/api/pike_file-system.html#synopsis"
-  },"139": {
+  },"138": {
     "doc": "Pike&bsol;FileSystem",
     "title": "Metodit",
     "content": "write() . Kirjoittaa tiedostoon. Signature . public function write ( string $path, string $content ) : int|false . Esimerkit . Katso myös Tiedostojen hallinta &gt; Tiedostoon kirjoittaminen. $numBytesWritten = $fs-&gt;write(__DIR__ . '/tiedosto.txt', 'Sisältö'); . read() . Lukee tiedoston. Signature . public function read ( string $path ) : string|false . Esimerkit . Katso myös Tiedostojen hallinta &gt; Tiedoston lukeminen. $contents = $fs-&gt;read(__DIR__ . '/tiedosto.txt'); . unlink() . Poistaa tiedoston. Signature . public function unlink ( string $path ) : bool . Esimerkit . Katso myös Tiedostojen hallinta &gt; Tiedoston poistaminen. $ok = $fs-&gt;unlink(__DIR__ . '/tiedosto.txt'); . copy() . Kopioi tiedoston. Signature . public function copy ( string $path, string $destPath ) : bool . Esimerkit . Katso myös Tiedostojen hallinta &gt; Tiedoston kopioiminen. $ok = $fs-&gt;copy(__DIR__ . '/tiedosto.txt', __DIR__ . '/copied.txt'); . rename() . Nimeää tai siirtää tiedoston. Signature . public rename ( string $oldPath, string $newPath ) : string|false . Esimerkit . Katso myös Tiedostojen hallinta &gt; Tiedoston nimeäminen tai siirtäminen. $ok = $fs-&gt;rename(__DIR__ . '/vanha.txt', __DIR__ . '/uusi.txt'); . move() . ks. rename(). mkDir() . Luo kansion tai kansioita. Signature . public function mkDir ( string $path, int $perms = 0755, bool $recursive = true ) : bool . Esimerkit . Katso myös Tiedostojen hallinta &gt; Kansion luominen. $ok = $fs-&gt;mkDir(__DIR__ . '/kansio'); . rmDir() . Poistaa tiedoston. Signature . public function rmDir ( string $path, $context = null ) : bool . Esimerkit . Katso myös Tiedostojen hallinta &gt; Kansion poistaminen. $ok = $fs-&gt;rmDir(__DIR__ . '/kansio'); . isFile() . Kertoo onko tiedosto olemassa. Signature . public function isFile ( string $path ) : bool . Esimerkit . Katso myös Tiedostojen hallinta &gt; Tiedostopolun tarkistaminen. $isFile = $fs-&gt;isFile(__DIR__ . '/tiedosto.txt'); . isDir() . Kertoo onko kansio olemassa. Signature . public function isDir ( string $path ) : bool . Esimerkit . Katso myös Tiedostojen hallinta &gt; Kansiopolun tarkistaminen. $isDir = $fs-&gt;isDir(__DIR__ . '/kansio'); . readDir() . Lukee kansion sisällön ei-rekursiivisesti. Signature . public function readDir ( string $path, string $filterPattern = '*', int $flags = GLOB_ERR ) : string[]|false . Esimerkit . Katso myös Tiedostojen hallinta &gt; Kansion sisällön lukeminen (Ei rekursiivinen). $fullFilePaths = $fs-&gt;readDir(__DIR__ . '/kansio'); . readDirRecursive() . Lukee kansion sisällön rekursiivisesti. Signature . public function readDirRecursive ( string $path, string $filterRegexp = '/.*/', int $flags = FilesystemIterator::CURRENT_AS_PATHNAME ) : mixed[] . Esimerkit . Katso myös Tiedostojen hallinta &gt; Kansion sisällön lukeminen (Rekursiivinen). $fullFilePaths = $fs-&gt;readDirRecursive(__DIR__ . '/kansio'); . lastModTime() . Kertoo milloin tiedostoa on edellisen kerran muokattu. Signature . public function lastModTime ( string $path ) : int|false . Esimerkit . Katso myös Tiedostojen hallinta &gt; Viimeisimmän modifikaation lukeminen (Rekursiivinen). $unixTime = $fs-&gt;lastModTime(__DIR__ . '/tiedosto.txt'); . static normalizePath() . Normalisoi tiedostopolun. Signature . public static function normalizePath ( string $path ) : string . Esimerkit . Katso myös Tiedostojen hallinta &gt; Polun normalisointi. $normalized = FileSystem::normalizePath($notNormalized); . ",
     "url": "https://ut4.github.io/pike/api/pike_file-system.html#metodit",
     "relUrl": "/api/pike_file-system.html#metodit"
-  },"140": {
+  },"139": {
     "doc": "Pike&bsol;FileSystem",
     "title": "Pike&bsol;FileSystem",
     "content": " ",
     "url": "https://ut4.github.io/pike/api/pike_file-system.html",
     "relUrl": "/api/pike_file-system.html"
-  },"141": {
+  },"140": {
     "doc": "Pike&bsol;Interfaces&bsol;FileSystemInterface",
     "title": "interface Pike\\Interfaces\\FileSystemInterface",
     "content": "Rajapinta jonka Pikessä käytettävät tiedostonhallintaluokkien tulee implementoida. Katso myös FileSystem. ",
     "url": "https://ut4.github.io/pike/api/interfaces/pike_interfaces_file-system-interface.html#interface-pikeinterfacesfilesysteminterface",
     "relUrl": "/api/interfaces/pike_interfaces_file-system-interface.html#interface-pikeinterfacesfilesysteminterface"
-  },"142": {
+  },"141": {
     "doc": "Pike&bsol;Interfaces&bsol;FileSystemInterface",
     "title": "Synopsis",
     "content": "interface FileSystemInterface { /* Metodit */ public write ( string $path, string $content ) : int|false public read ( string $path ) : string|false public unlink ( string $path ) : bool public copy ( string $path, string $destPath ) : bool public rename ( string $oldPath, string $newPath ) : string|false public move ( string $oldPath, string $newPath ) : string|false public mkDir ( string $path, int $perms = 0755, bool $recursive = true ) : bool public rmDir ( string $path, resource $context = null ) : bool public isFile ( string $path ) : bool public isDir ( string $path ) : bool public readDir ( string $path, string $filterPattern = '*', int $flags = GLOB_ERR); string[]|false public readDirRecursive ( string $path, string $filterRegexp = '/.*/' ) : array public lastModTime ( string $path ) : int|false } . ",
     "url": "https://ut4.github.io/pike/api/interfaces/pike_interfaces_file-system-interface.html#synopsis",
     "relUrl": "/api/interfaces/pike_interfaces_file-system-interface.html#synopsis"
-  },"143": {
+  },"142": {
     "doc": "Pike&bsol;Interfaces&bsol;FileSystemInterface",
     "title": "Pike&bsol;Interfaces&bsol;FileSystemInterface",
     "content": " ",
     "url": "https://ut4.github.io/pike/api/interfaces/pike_interfaces_file-system-interface.html",
     "relUrl": "/api/interfaces/pike_interfaces_file-system-interface.html"
-  },"144": {
+  },"143": {
     "doc": "Pike&bsol;Interfaces&bsol;MailerInterface",
     "title": "interface Pike\\Interfaces\\MailerInterface",
     "content": "Rajapinta sähköposteja lähettäville luokille. Katso myös PhpMailerMailer. ",
     "url": "https://ut4.github.io/pike/api/interfaces/pike_interfaces_mailer-interface.html#interface-pikeinterfacesmailerinterface",
     "relUrl": "/api/interfaces/pike_interfaces_mailer-interface.html#interface-pikeinterfacesmailerinterface"
-  },"145": {
+  },"144": {
     "doc": "Pike&bsol;Interfaces&bsol;MailerInterface",
     "title": "Synopsis",
     "content": "interface MailerInterface { /* Metodit */ public sendMail ( object $settings ) : bool } . ",
     "url": "https://ut4.github.io/pike/api/interfaces/pike_interfaces_mailer-interface.html#synopsis",
     "relUrl": "/api/interfaces/pike_interfaces_mailer-interface.html#synopsis"
-  },"146": {
+  },"145": {
     "doc": "Pike&bsol;Interfaces&bsol;MailerInterface",
     "title": "Pike&bsol;Interfaces&bsol;MailerInterface",
     "content": " ",
     "url": "https://ut4.github.io/pike/api/interfaces/pike_interfaces_mailer-interface.html",
     "relUrl": "/api/interfaces/pike_interfaces_mailer-interface.html"
-  },"147": {
+  },"146": {
     "doc": "Pike&bsol;Interfaces&bsol;SessionInterface",
     "title": "interface Pike\\Interfaces\\SessionInterface",
     "content": "Rajapinta jonka Pikessä käytettävät sessioluokat tulee implementoida. Katso myös NativeSession. ",
     "url": "https://ut4.github.io/pike/api/interfaces/pike_interfaces_session-interface.html#interface-pikeinterfacessessioninterface",
     "relUrl": "/api/interfaces/pike_interfaces_session-interface.html#interface-pikeinterfacessessioninterface"
-  },"148": {
+  },"147": {
     "doc": "Pike&bsol;Interfaces&bsol;SessionInterface",
     "title": "Synopsis",
-    "content": "interface SessionInterface { /* Metodit */ public start () : void public put (string $key, mixed $value) : void public get (string $key, mixed $default = null) : mixed public remove (string $key) : void public commit () : void public destroy () : void } . ",
+    "content": "interface SessionInterface { /* Metodit */ public start ( void ) : void public put ( string $key, mixed $value ) : void public get ( string $key, mixed $default = null ) : mixed public remove ( string $key ) : void public commit ( void ) : void public destroy ( void ) : void } . ",
     "url": "https://ut4.github.io/pike/api/interfaces/pike_interfaces_session-interface.html#synopsis",
     "relUrl": "/api/interfaces/pike_interfaces_session-interface.html#synopsis"
-  },"149": {
+  },"148": {
     "doc": "Pike&bsol;Interfaces&bsol;SessionInterface",
     "title": "Pike&bsol;Interfaces&bsol;SessionInterface",
     "content": " ",
     "url": "https://ut4.github.io/pike/api/interfaces/pike_interfaces_session-interface.html",
     "relUrl": "/api/interfaces/pike_interfaces_session-interface.html"
-  },"150": {
+  },"149": {
     "doc": "Pike&bsol;Interfaces&bsol;UserRepositoryInterface",
     "title": "interface Pike\\Interfaces\\UserRepositoryInterface",
     "content": "Rajapinta jonka Pikessä käytettävät käyttäjätallennusluokat tulee implementoida. Katso myös DefaultUserRepository. ",
     "url": "https://ut4.github.io/pike/api/interfaces/pike_interfaces_user-repository-interface.html#interface-pikeinterfacesuserrepositoryinterface",
     "relUrl": "/api/interfaces/pike_interfaces_user-repository-interface.html#interface-pikeinterfacesuserrepositoryinterface"
-  },"151": {
+  },"150": {
     "doc": "Pike&bsol;Interfaces&bsol;UserRepositoryInterface",
     "title": "Synopsis",
     "content": "interface UserRepositoryInterface { /* Metodit */ public createUser ( User $user ) : string public getUserByColumn ( string $column, string $value) : ?User public updateUserByUserId ( User $user, string[] $fields, string $userId ) : int public deleteUserByUserId ( string $userId): int public runInTransaction ( Closure $fn ) : mixed } . ",
     "url": "https://ut4.github.io/pike/api/interfaces/pike_interfaces_user-repository-interface.html#synopsis",
     "relUrl": "/api/interfaces/pike_interfaces_user-repository-interface.html#synopsis"
-  },"152": {
+  },"151": {
     "doc": "Pike&bsol;Interfaces&bsol;UserRepositoryInterface",
     "title": "Pike&bsol;Interfaces&bsol;UserRepositoryInterface",
     "content": " ",
     "url": "https://ut4.github.io/pike/api/interfaces/pike_interfaces_user-repository-interface.html",
     "relUrl": "/api/interfaces/pike_interfaces_user-repository-interface.html"
-  },"153": {
+  },"152": {
     "doc": "Pike&bsol;NativeSession",
     "title": "class Pike\\NativeSession",
     "content": "Abstraktoi php:n oman sessio-implementaation. ",
     "url": "https://ut4.github.io/pike/api/pike_native-session.html#class-pikenativesession",
     "relUrl": "/api/pike_native-session.html#class-pikenativesession"
-  },"154": {
+  },"153": {
     "doc": "Pike&bsol;NativeSession",
     "title": "Synopsis",
     "content": "class NativeSession implements SessionInterface { /* Metodit */ public __construct ( string $bucketKey = 'pike', bool $autostart = true) public start ( void ) : void public put ( string $key, mixed $value ) : void public get ( string $key, mixed $default = null ) : mixed public remove ( string $key ) : void public commit ( void ) : void public destroy ( void ) : void } . ",
     "url": "https://ut4.github.io/pike/api/pike_native-session.html#synopsis",
     "relUrl": "/api/pike_native-session.html#synopsis"
-  },"155": {
+  },"154": {
     "doc": "Pike&bsol;NativeSession",
     "title": "Metodit",
     "content": "__construct() . Luo uuden sessio-olion. Signature . public function __construct ( string $bucketKey = 'pike', bool $autostart = true) . Esimerkit . $session = new NativeSession('namespace', false); . start() . Avaa session. Signature . public function start ( void ) : void . Esimerkit . $session-&gt;start(); . put() . Kirjoittaa arvon sessioon. Signature . public function put ( string $key, mixed $value ) : void . Esimerkit . $session-&gt;put('user', ['id' =&gt; '12', 'role' =&gt; 1]); . get() . Palauttaa sessioon kirjoitetun arvon, tai $default mikäli sitä ei löytynyt. Signature . public function get ( string $key, mixed $default = null ) : mixed . Esimerkit . $user = $session-&gt;get('user', ['id' =&gt; 0]); . remove() . Poistaa arvon sessiosta. Signature . public function remove ( string $key ) : void . Esimerkit . $session-&gt;remove('user'); . commit() . Kirjoittaa sessioon kirjoitetut arvot levylle, ja päättää session. Signature . public function commit ( void ) : void . Esimerkit . $session-&gt;commit(); . destroy() . Poistaa kaikki tähän sessioon kirjoitetut arvot. Signature . public function destroy ( void ) : void . Esimerkit . $session-&gt;destroy(); . ",
     "url": "https://ut4.github.io/pike/api/pike_native-session.html#metodit",
     "relUrl": "/api/pike_native-session.html#metodit"
-  },"156": {
+  },"155": {
     "doc": "Pike&bsol;NativeSession",
     "title": "Pike&bsol;NativeSession",
     "content": " ",
     "url": "https://ut4.github.io/pike/api/pike_native-session.html",
     "relUrl": "/api/pike_native-session.html"
-  },"157": {
+  },"156": {
     "doc": "Pike&bsol;ObjectValidator",
     "title": "class Pike\\ObjectValidator",
     "content": "Luokka jolla voi validoida olioita. Katso myös Datan validointi &gt; Olioiden validointi. ",
     "url": "https://ut4.github.io/pike/api/pike_object-validator.html#class-pikeobjectvalidator",
     "relUrl": "/api/pike_object-validator.html#class-pikeobjectvalidator"
-  },"158": {
+  },"157": {
     "doc": "Pike&bsol;ObjectValidator",
     "title": "Synopsis",
     "content": "class ObjectValidator { /* Metodit */ public rule ( string $propPath, string $ruleName, mixed ...$args ) : $this public validate ( object $object ) : string[] public addRuleImpl ( string $name, callable $checkFn, string $errorTmpl ) : $this } . ",
     "url": "https://ut4.github.io/pike/api/pike_object-validator.html#synopsis",
     "relUrl": "/api/pike_object-validator.html#synopsis"
-  },"159": {
+  },"158": {
     "doc": "Pike&bsol;ObjectValidator",
     "title": "Metodit",
     "content": "rule() . Lisää uuden validaatiosäännön. Signature . public function rule ( string $propPath, string $ruleName, mixed ...$args ) : $this . Esimerkit . $validator-&gt;rule('foo', 'is', 'string')-&gt;rule('bar', 'minLength', 10); . validate() . Validoi arvon $object. Palauttaa virheviestit, tai [] mikäli niitä ei ollut. Signature . public function validate ( object $object ) : string[] . Esimerkit . $errors = $validator-&gt;validate((object) ['foo' =&gt; 'a', =&gt; 'bar' =&gt; 'b']); . addRuleImpl() . Rekisteröi custom-validaatiosääntöimplementaation. Käytettävissä vain siihen lisätyssä oliossa. Signature . public function addRuleImpl ( string $name, callable $checkFn, string $errorTmpl ) : $this . Esimerkit . Katso myös Datan validointi &gt; Custom one-time -validaattorit. $v = $v-&gt;addRuleImpl('isFoo', function ($value) { return $value === 'foo'; }, '%s ei ole foo'); . ",
     "url": "https://ut4.github.io/pike/api/pike_object-validator.html#metodit",
     "relUrl": "/api/pike_object-validator.html#metodit"
-  },"160": {
+  },"159": {
     "doc": "Pike&bsol;ObjectValidator",
     "title": "Pike&bsol;ObjectValidator",
     "content": " ",
     "url": "https://ut4.github.io/pike/api/pike_object-validator.html",
     "relUrl": "/api/pike_object-validator.html"
-  },"161": {
+  },"160": {
     "doc": "Pike&bsol;PhpMailerMailer",
     "title": "class Pike\\PhpMailerMailer",
     "content": "Luokka joka lähettää sähköposteja käyttäen PhpMaileria. Huomaa että tämä luokan käyttämä PhpMailer ei ole oletuksena composer-riippuvuuksissa vaan tulee asentaa erikseen composer require phpmailer/phpmailer. ",
     "url": "https://ut4.github.io/pike/api/pike_php-mailer-mailer.html#class-pikephpmailermailer",
     "relUrl": "/api/pike_php-mailer-mailer.html#class-pikephpmailermailer"
-  },"162": {
+  },"161": {
     "doc": "Pike&bsol;PhpMailerMailer",
     "title": "Synopsis",
     "content": "class PhpMailerMailer implements MailerInterface { /* Metodit */ public sendMail ( object $settings ) : bool } . ",
     "url": "https://ut4.github.io/pike/api/pike_php-mailer-mailer.html#synopsis",
     "relUrl": "/api/pike_php-mailer-mailer.html#synopsis"
-  },"163": {
+  },"162": {
     "doc": "Pike&bsol;PhpMailerMailer",
     "title": "Metodit",
     "content": "sendMail() . Lähettää mailin tai heittää \\PHPMailer\\PHPMailer\\Exception. Signature . public sendMail ( object $settings ) : bool . Esimerkit . (new PhpMailerMailer)-&gt;sendMail((object) [ 'fromAddress' =&gt; 'noreply@mysite.com', 'fromName' =&gt; 'My site', 'toAddress' =&gt; 'moderator@mail.com', 'toName' =&gt; 'Mo Moderator', 'subject' =&gt; 'Viesti sivustolta', 'body' =&gt; '&lt;h1&gt;Viesti sivusolta&lt;/h1&gt;&lt;p&gt;...&lt;/p&gt;', 'configureMailer' =&gt; function (\\PHPMailer\\PHPMailer\\PHPMailer $mail) { $mail-&gt;isHTML(true); } ]); . ",
     "url": "https://ut4.github.io/pike/api/pike_php-mailer-mailer.html#metodit",
     "relUrl": "/api/pike_php-mailer-mailer.html#metodit"
-  },"164": {
+  },"163": {
     "doc": "Pike&bsol;PhpMailerMailer",
     "title": "Pike&bsol;PhpMailerMailer",
     "content": " ",
     "url": "https://ut4.github.io/pike/api/pike_php-mailer-mailer.html",
     "relUrl": "/api/pike_php-mailer-mailer.html"
-  },"165": {
+  },"164": {
     "doc": "Pike&bsol;PikeException",
     "title": "class Pike\\PikeException",
     "content": "Piken ainoa poikkeusluokka. ",
     "url": "https://ut4.github.io/pike/api/pike_pike-exception.html#class-pikepikeexception",
     "relUrl": "/api/pike_pike-exception.html#class-pikepikeexception"
-  },"166": {
+  },"165": {
     "doc": "Pike&bsol;PikeException",
     "title": "Synopsis",
     "content": "class PikeException extends RuntimeException { /* Vakiot */ const FAILED_DB_OP = 101010 ; const FAILED_FS_OP = 101011 ; const BAD_INPUT = 101012 ; const INEFFECTUAL_DB_OP = 101013 ; const ERROR_EXCEPTION = 101014 ; } . Esimerkit . try { throw new PikeException(PikeException::BAD_INPUT); } catch (PikeException $e) { $e-&gt;getCode() === PikeException::BAD_INPUT; // true } . ",
     "url": "https://ut4.github.io/pike/api/pike_pike-exception.html#synopsis",
     "relUrl": "/api/pike_pike-exception.html#synopsis"
-  },"167": {
+  },"166": {
     "doc": "Pike&bsol;PikeException",
     "title": "Pike&bsol;PikeException",
     "content": " ",
     "url": "https://ut4.github.io/pike/api/pike_pike-exception.html",
     "relUrl": "/api/pike_pike-exception.html"
-  },"168": {
+  },"167": {
     "doc": "Pike&bsol;Request",
     "title": "class Pike\\Request",
     "content": "Luokka, joka kapseloi HTTP-pyynnöt. ",
     "url": "https://ut4.github.io/pike/api/pike_request.html#class-pikerequest",
     "relUrl": "/api/pike_request.html#class-pikerequest"
-  },"169": {
+  },"168": {
     "doc": "Pike&bsol;Request",
     "title": "Synopsis",
-    "content": "class Request { /* Muuttujat */ public string $path ; public string $method ; public object $body ; public object $files ; public object $params ; public ?object $routeInfo ; public ?string $name ; public mixed $myData ; /* Metodit */ public __construct ( string $path, string $method = 'GET', ?object $body = null, ?object $files = null, ?array $serverVars = null ) public queryVar ( string $key, ?string $default = null ) : ?string public attr ( string $key, mixed $default = null ) : mixed public cookie ( string $key, ?string $default = null ) : ?string public header ( string $name, ?string $default = null ) : ?string public static createFromGlobals ( ?string $fullUrl, ?string $baseUrl = null ) : self } . ",
+    "content": "class Request { /* Muuttujat */ public string $path ; public string $method ; public object $body ; public object $files ; public object $params ; public ?object $routeInfo ; public ?string $name ; public mixed $myData ; /* Metodit */ public __construct ( string $path, string $method = 'GET', ?object $body = null, ?object $files = null, ?array $serverVars = null, ?array $queryVars = null ) public queryVar ( string $key, ?string $default = null ) : ?string public attr ( string $key, mixed $default = null ) : mixed public cookie ( string $key, ?string $default = null ) : ?string public header ( string $name, ?string $default = null ) : ?string public static createFromGlobals ( ?string $fullUrl, ?string $baseUrl = null ) : self } . ",
     "url": "https://ut4.github.io/pike/api/pike_request.html#synopsis",
     "relUrl": "/api/pike_request.html#synopsis"
-  },"170": {
+  },"169": {
     "doc": "Pike&bsol;Request",
     "title": "Muuttujat",
     "content": "path Pyynnön polku, esim. /yritys/palvelut. method Pyynnön HTTP-metodi, esim. POST. body $_POST-data, tai (json)parsattu php://input. files Pyynnön tiedostot ($_FILES). params Routerin mappaamat parametrit, esim. (object) ['parametrinNimi' =&gt; 'arvo']. routeInfo Lisätietoa pyynnön reittimäärityksestä, esim. (object) ['myCtx' =&gt; ['my' =&gt; 'data'], 'name' =&gt; 'reitin-nimi']. name Pyynnön reittimäärityksen nimi. Sama kuin routeInfo-&gt;name. myData Kenttä johon voit tallentaa mitä tahansa (user, csrfToken jne.). ",
     "url": "https://ut4.github.io/pike/api/pike_request.html#muuttujat",
     "relUrl": "/api/pike_request.html#muuttujat"
-  },"171": {
+  },"170": {
     "doc": "Pike&bsol;Request",
     "title": "Metodit",
-    "content": "__construct() . Luo uuden request-olion. Signature . public function __construct ( string $path, string $method = 'GET', ?object $body = null, ?object $files = null, ?array $serverVars = null ) . Esimerkit . Katso myös Pike\\Request::createFromGlobals(). $request = new Request('/url'); . queryVar() . Palauttaa arvon $_GET-taukosta, tai $default mikäli sitä ei löytynyt. Signature . public function queryVar ( string $key, ?string $default = null ) : ?string . Esimerkit . $value = $request-&gt;queryVar('search'); . attr() . Palauttaa arvon $_SERVER-taukosta, tai $default mikäli sitä ei löytynyt. Signature . public function attr ( string $key, mixed $default = null ) : mixed . Esimerkit . $ip = $request-&gt;attr('REMOTE_ADDR'); . cookie() . Palauttaa arvon $_COOKIE-taukosta, tai $default mikäli sitä ei löytynyt. Signature . public function cookie ( string $key, ?string $default = null ) : ?string . Esimerkit . $value = $request-&gt;cookie('myCookie'); . header() . Palauttaa arvon [$SERVER](https://www.php.net/manual/en/reserved.variables.server.php)-taukosta (HTTP*, CONTENT_LENGTH jne.), tai $default mikäli sitä ei löytynyt. Signature . public function header ( string $name, ?string $default = null ) : ?string . Esimerkit . $value = $request-&gt;header('X-Requested-With'); . createFromGlobals() . Luo uuden request-olion asettaen: . | pathiksi explode('?', $fullUrl ?? $_SERVER['REQUEST_URI'])[0] poistaen sen alusta $baseUrl | metodiksi $_SERVER['REQUEST_METHOD'] | bodyksi (POST, PUT): . | json_decode(php://input) mikäli Content-Type-headeri oli application/json | $_POST mikäli Content-Type-headeri oli mikä tahansa muu | . | . Signature . public static function createFromGlobals ( ?string $fullUrl, ?string $baseUrl = null ) : self . Esimerkit . $request = Request::createFromGlobals(null, '/dir/'); . ",
+    "content": "__construct() . Luo uuden request-olion. Signature . public function __construct ( string $path, string $method = 'GET', ?object $body = null, ?object $files = null, ?array $serverVars = null, ?array $queryVars = null ) . Esimerkit . Katso myös Pike\\Request::createFromGlobals(). $request = new Request('/url'); . queryVar() . Palauttaa arvon $_GET-, tai (konstruktoriin passatusta) $serverVars-taulukosta, tai $default mikäli sitä ei löytynyt kummastakaan. Signature . public function queryVar ( string $key, ?string $default = null ) : ?string . Esimerkit . $value = $request-&gt;queryVar('search'); . attr() . Palauttaa arvon $_SERVER-taukosta, tai $default mikäli sitä ei löytynyt. Signature . public function attr ( string $key, mixed $default = null ) : mixed . Esimerkit . $ip = $request-&gt;attr('REMOTE_ADDR'); . cookie() . Palauttaa arvon $_COOKIE-taukosta, tai $default mikäli sitä ei löytynyt. Signature . public function cookie ( string $key, ?string $default = null ) : ?string . Esimerkit . $value = $request-&gt;cookie('myCookie'); . header() . Palauttaa arvon [$SERVER](https://www.php.net/manual/en/reserved.variables.server.php)-taukosta (HTTP*, CONTENT_LENGTH jne.), tai $default mikäli sitä ei löytynyt. Signature . public function header ( string $name, ?string $default = null ) : ?string . Esimerkit . $value = $request-&gt;header('X-Requested-With'); . createFromGlobals() . Luo uuden request-olion asettaen: . | pathiksi explode('?', $fullUrl ?? $_SERVER['REQUEST_URI'])[0] poistaen sen alusta $baseUrl | metodiksi $_SERVER['REQUEST_METHOD'] | bodyksi (POST, PUT): . | json_decode(php://input) mikäli Content-Type-headeri oli application/json | $_POST mikäli Content-Type-headeri oli mikä tahansa muu | . | . Signature . public static function createFromGlobals ( ?string $fullUrl, ?string $baseUrl = null ) : self . Esimerkit . $request = Request::createFromGlobals(null, '/dir/'); . ",
     "url": "https://ut4.github.io/pike/api/pike_request.html#metodit",
     "relUrl": "/api/pike_request.html#metodit"
-  },"172": {
+  },"171": {
     "doc": "Pike&bsol;Request",
     "title": "Pike&bsol;Request",
     "content": " ",
     "url": "https://ut4.github.io/pike/api/pike_request.html",
     "relUrl": "/api/pike_request.html"
-  },"173": {
+  },"172": {
     "doc": "Pike&bsol;Response",
     "title": "class Pike\\Response",
     "content": "Luokka jolla rakennetaan HTTP-vastaukset, jotka Pike toimittaa clientille. ",
     "url": "https://ut4.github.io/pike/api/pike_response.html#class-pikeresponse",
     "relUrl": "/api/pike_response.html#class-pikeresponse"
-  },"174": {
+  },"173": {
     "doc": "Pike&bsol;Response",
     "title": "Synopsis",
-    "content": "class Response { /* Metodit */ public __construct ( int $statusCode = 200 ) public status ( int $statusCode ) : $this public json ( object|array|string $data ) : $this public html ( string $body ) : $this public plain ( string $body ) : $this public attachment ( string $data, string $fileName = 'file.zip', string $mime = 'application/zip' ) : $this public redirect ( string $to, bool $isPermanent = true ) : $this public header ( string $name, string $value, bool $replace = true ) : $this public send ( void ) : void public sendIfReady ( void ) : bool public isSent ( void ) : bool } . ",
+    "content": "class Response { /* Metodit */ public __construct ( int $statusCode = 200 ) public status ( int $statusCode ) : $this public json ( object|array|string $data ) : $this public html ( string $body ) : $this public plain ( string $body ) : $this public type ( string $type ) : $this public attachment ( string $data, string $fileName = 'file.zip', string $mime = 'application/zip' ) : $this public redirect ( string $to, bool $isPermanent = true ) : $this public header ( string $name, string $value, bool $replace = true ) : $this public send ( string $body ) : void public commitIfReady ( void ) : bool public isCommitted ( void ) : bool } . ",
     "url": "https://ut4.github.io/pike/api/pike_response.html#synopsis",
     "relUrl": "/api/pike_response.html#synopsis"
-  },"175": {
+  },"174": {
     "doc": "Pike&bsol;Response",
     "title": "Metodit",
-    "content": "__construct() . Luo uuden response-olion. Signature . public function __construct ( int $statusCode = 200 ) . Esimerkit . $response = new Response(404); . status() . Asettaa vastauksen HTTP-statuskoodin. Signature . public function status ( int $statusCode ) : $this . Esimerkit . $response = $response-&gt;status(418); . json() . Asettaa vastauksen bodyksi $data, ja statuskoodiksi application/json. Signature . public function json ( object|array|string $data ) : $this . Esimerkit . $response = $response-&gt;json(['key' =&gt; 'val']); . html() . Asettaa vastauksen bodyksi $data, ja statuskoodiksi text/html. Signature . public function html ( string $body ) : $this . Esimerkit . $response = $response-&gt;html('&lt;!DOCTYPE html&gt;...'); . plain() . Asettaa vastauksen bodyksi $data, ja statuskoodiksi text/plain. Signature . public function plain ( string $body ) : $this . Esimerkit . $response = $response-&gt;plain('Tekstiä...'); . attachment() . Lisää vastaukseen tiedoston. Signature . public function attachment ( string $data, string $fileName = 'file.zip', string $mime = 'application/zip' ) : $this . Esimerkit . $response = $response-&gt;attachment('Tekstiä', 'tiedosto.txt', 'text/plain'); . redirect() . Asettaa vastaukseen uudelleenohjauksen. Signature . public function redirect ( string $to, bool $isPermanent = true ) : $this . Esimerkit . $response = $response-&gt;redirect('https://site.com/url'); . header() . Lisää vastaukseen HTTP-headerin. Signature . public function header ( string $name, string $value, bool $replace = true ) : $this . Esimerkit . $response = $response-&gt;header('name', 'value'); . send() . Lähettää vastauksen clientille, tai heittää Pike\\PikeExceptionin mikäli vastauksessa ei ollut mitään lähetettävää. Signature . public function send ( void ) : void . Esimerkit . $response-&gt;send(); . sendIfReady() . Lähettää vastauksen mikäli se ei ollut vielä lähetetty. Signature . public function sendIfReady ( void ) : bool . Esimerkit . $wasSent = $response-&gt;sendIfReady(); . isSent() . Kertoo onko vastaus lähetetty. Signature . public function isSent ( void ) : bool . Esimerkit . $isIt = $response-&gt;isSent(); . ",
+    "content": "__construct() . Luo uuden response-olion. Signature . public function __construct ( int $statusCode = 200 ) . Esimerkit . $response = new Response(404); . status() . Asettaa vastauksen HTTP-statuskoodin. Signature . public function status ( int $statusCode ) : $this . Esimerkit . $response = $response-&gt;status(418); . json() . Asettaa vastauksen bodyksi $data, ja statuskoodiksi application/json. Signature . public function json ( object|array|string $data ) : $this . Esimerkit . $response = $response-&gt;json(['key' =&gt; 'val']); . html() . Asettaa vastauksen bodyksi $data, ja statuskoodiksi text/html. Signature . public function html ( string $body ) : $this . Esimerkit . $response = $response-&gt;html('&lt;!DOCTYPE html&gt;...'); . plain() . Asettaa vastauksen bodyksi $data, ja statuskoodiksi text/plain. Signature . public function plain ( string $body ) : $this . Esimerkit . $response = $response-&gt;plain('Tekstiä...'); . type() . Asettaa vastauksen Content-Type:n. Signature . public function type ( string $type ) : $this . Esimerkit . $response = $response-&gt;type('image/png')-&gt;send(...); . attachment() . Lisää vastaukseen tiedoston. Signature . public function attachment ( string $data, string $fileName = 'file.zip', string $mime = 'application/zip' ) : $this . Esimerkit . $response = $response-&gt;attachment('Tekstiä', 'tiedosto.txt', 'text/plain'); . redirect() . Asettaa vastaukseen uudelleenohjauksen. Signature . public function redirect ( string $to, bool $isPermanent = true ) : $this . Esimerkit . $response = $response-&gt;redirect('https://site.com/url'); . header() . Lisää vastaukseen HTTP-headerin. Signature . public function header ( string $name, string $value, bool $replace = true ) : $this . Esimerkit . $response = $response-&gt;header('name', 'value'); . send() . Asettaa vastauksen body:n. Signature . public function send ( string $body ) : void . Esimerkit . $response-&gt;send('data'); . commitIfReady() . Lähettää vastauksen mikäli se ei ollut vielä lähetetty. Signature . public function commitIfReady ( void ) : bool . Esimerkit . $wasSent = $response-&gt;commitIfReady(); . isCommitted() . Kertoo onko vastaus lähetetty. Signature . public function isCommitted ( void ) : bool . Esimerkit . $isIt = $response-&gt;isCommitted(); . ",
     "url": "https://ut4.github.io/pike/api/pike_response.html#metodit",
     "relUrl": "/api/pike_response.html#metodit"
-  },"176": {
+  },"175": {
     "doc": "Pike&bsol;Response",
     "title": "Pike&bsol;Response",
     "content": " ",
     "url": "https://ut4.github.io/pike/api/pike_response.html",
     "relUrl": "/api/pike_response.html"
-  },"177": {
+  },"176": {
     "doc": "Pike&bsol;Router",
     "title": "class Pike\\Router",
     "content": "Luokka jolla määritellään applikaation HTTP-reitit ja niiden käsittelijät (kontrollerit). AltouRouterin dokumentaatio osoittessa altorouter.com. ",
     "url": "https://ut4.github.io/pike/api/pike_router.html#class-pikerouter",
     "relUrl": "/api/pike_router.html#class-pikerouter"
-  },"178": {
+  },"177": {
     "doc": "Pike&bsol;Router",
     "title": "Synopsis",
     "content": "class Router extends AltoRouter { /* Metodit */ public on ( string $pattern, callable $fn ) : void } . ",
     "url": "https://ut4.github.io/pike/api/pike_router.html#synopsis",
     "relUrl": "/api/pike_router.html#synopsis"
-  },"179": {
+  },"178": {
     "doc": "Pike&bsol;Router",
     "title": "Metodit",
     "content": "on() . Lisää middleware-funktion. Signature . public function on ( string $pattern, callable $fn ) : void . Esimerkit . Katso myös Esimerkit &gt; Reittien käyttäjäoikeudet. $router-&gt;on('*', function (Request $req, Response $res, callable $next) { // .. }); . ",
     "url": "https://ut4.github.io/pike/api/pike_router.html#metodit",
     "relUrl": "/api/pike_router.html#metodit"
-  },"180": {
+  },"179": {
     "doc": "Pike&bsol;Router",
     "title": "Pike&bsol;Router",
     "content": " ",
     "url": "https://ut4.github.io/pike/api/pike_router.html",
     "relUrl": "/api/pike_router.html"
+  },"180": {
+    "doc": "Pike&bsol;ServiceDefaults",
+    "title": "class Pike\\ServiceDefaults",
+    "content": "Tarjoilee boot-vaiheessa luotavat palvelut. Tämä luokka on turvallista periä. ",
+    "url": "https://ut4.github.io/pike/api/pike_service-defaults.html#class-pikeservicedefaults",
+    "relUrl": "/api/pike_service-defaults.html#class-pikeservicedefaults"
   },"181": {
+    "doc": "Pike&bsol;ServiceDefaults",
+    "title": "Synopsis",
+    "content": "class ServiceDefaults { /* Metodit */ public __construct ( AppContext $ctx ) public makeConfig ( object|array|null $config = null ) : AppConfig public makeDb ( void ) : Db public makeAuth ( void ) : Authenticator } . ",
+    "url": "https://ut4.github.io/pike/api/pike_service-defaults.html#synopsis",
+    "relUrl": "/api/pike_service-defaults.html#synopsis"
+  },"182": {
+    "doc": "Pike&bsol;ServiceDefaults",
+    "title": "Metodit",
+    "content": "__construct() . Tätä luokkaa ei normaalisti instantioida manuaalisesti. makeConfig() . Palauttaa uuden konfiguraatio-olion. Signature . public function makeConfig ( object|array|null $config = null ) : AppConfig . Esimerkit . $app = new App('MyApp::create', function (AppContext $ctx, ServiceDefaults $defaults) { $ctx-&gt;config = $defaults-&gt;makeConfig(require 'my-config.php'); }); . makeDb() . Luo uuden tietokantaolion. Signature . public function makeDb ( void ) : Db . Esimerkit . $app = new App('MyApp::create', function (AppContext $ctx, ServiceDefaults $defaults) { $ctx-&gt;db = $defaults-&gt;makeDb(); }); . __construct() . Luo uuden autentikaatioapiolion. Signature . public function makeAuth ( void ) : Authenticator . Esimerkit . $app = new App('MyApp::create', function (AppContext $ctx, ServiceDefaults $defaults) { $ctx-&gt;auth = $defaults-&gt;makeAuth(); }); . ",
+    "url": "https://ut4.github.io/pike/api/pike_service-defaults.html#metodit",
+    "relUrl": "/api/pike_service-defaults.html#metodit"
+  },"183": {
+    "doc": "Pike&bsol;ServiceDefaults",
+    "title": "Pike&bsol;ServiceDefaults",
+    "content": " ",
+    "url": "https://ut4.github.io/pike/api/pike_service-defaults.html",
+    "relUrl": "/api/pike_service-defaults.html"
+  },"184": {
     "doc": "Pike&bsol;Template",
     "title": "class Pike\\Template",
     "content": "Luokka joka auttaa HTML-sisällön turvallisessa ulostamisessa. Tämä luokka on suunniteltu perittäväksi. ",
     "url": "https://ut4.github.io/pike/api/pike_template.html#class-piketemplate",
     "relUrl": "/api/pike_template.html#class-piketemplate"
-  },"182": {
+  },"185": {
     "doc": "Pike&bsol;Template",
     "title": "Synopsis",
     "content": "class Template { /* Metodit */ public __construct ( string $file, ?array&lt;string, mixed&gt; $vars = null ) public render ( array&lt;string, mixed&gt; $locals = [] ) : string } . ",
     "url": "https://ut4.github.io/pike/api/pike_template.html#synopsis",
     "relUrl": "/api/pike_template.html#synopsis"
-  },"183": {
+  },"186": {
     "doc": "Pike&bsol;Template",
     "title": "Metodit",
     "content": "__construct() . Luo uuden templaatti-olion. $vars-taulukon arvoihin voi viitata templaatissa $this-&gt;taulukonKentta. Signature . public function __construct ( string $file, ?array&lt;string, mixed&gt; $vars = null ) . Esimerkit . $tmpl = new Template(__DIR__ . '/foo.php', ['taulukonKentta' =&gt; 'bar']); . render() . Renderöi konstruktorissa määritellyn tiedoston. $locals-taulukon arvoihin voi viitata templaatissa $taulukonKentta. Signature . public function render ( array&lt;string, mixed&gt; $locals = [] ) : string . Esimerkit . $output = $tmpl-&gt;render(['taulukonKentta' =&gt; 'value']); . ",
     "url": "https://ut4.github.io/pike/api/pike_template.html#metodit",
     "relUrl": "/api/pike_template.html#metodit"
-  },"184": {
+  },"187": {
     "doc": "Pike&bsol;Template",
     "title": "Pike&bsol;Template",
     "content": " ",
     "url": "https://ut4.github.io/pike/api/pike_template.html",
     "relUrl": "/api/pike_template.html"
-  },"185": {
+  },"188": {
     "doc": "Pike&bsol;Translator",
     "title": "class Pike\\Translator",
     "content": "Tämä luokka on suunniteltu perittäväksi. ",
     "url": "https://ut4.github.io/pike/api/pike_translator.html#class-piketranslator",
     "relUrl": "/api/pike_translator.html#class-piketranslator"
-  },"186": {
+  },"189": {
     "doc": "Pike&bsol;Translator",
     "title": "Synopsis",
     "content": "class Translator { /* Metodit */ public __construct ( array&lt;string, string&gt; $strings = [] ) public addStrings ( array&lt;string, string&gt; $strings ) : void public t ( string $key, float|int|string ...$args ) : string public hasKey ( string $key ) : bool } . ",
     "url": "https://ut4.github.io/pike/api/pike_translator.html#synopsis",
     "relUrl": "/api/pike_translator.html#synopsis"
-  },"187": {
+  },"190": {
     "doc": "Pike&bsol;Translator",
     "title": "Metodit",
     "content": "__construct() . Luo uuden kääntäjä-olion. Signature . public function __construct ( array&lt;string, string&gt; $strings = [] ) . Esimerkit . $translator = new Translator(['Hello World!' =&gt; 'Hei Maailma!']); . addStrings() . Rekisteröi lisää käännösmerkkijonoja. Signature . public function addStrings ( array&lt;string, string&gt; $strings ) : void . Esimerkit . $translator-&gt;addStrings(['Hello World!' =&gt; 'Hei Maailma!']); . t() . Kääntää käännösmerkkijonon $key, ja korvaa siihen määritellyt sprintf-placeholderit (esim. %s) argumenteilla $args. Signature . public function t ( string $key, float|int|string ...$args ) : string . Esimerkit . $translated = $translator-&gt;t('Platform %d %s', 9, '3/4'); . hasKey() . Kertoo onko käännösmerkkijono $key rekisteröity. Signature . public function hasKey ( string $key ) : bool . Esimerkit . $hasIt = $translator-&gt;hasKey('Hello World!'); . ",
     "url": "https://ut4.github.io/pike/api/pike_translator.html#metodit",
     "relUrl": "/api/pike_translator.html#metodit"
-  },"188": {
+  },"191": {
     "doc": "Pike&bsol;Translator",
     "title": "Pike&bsol;Translator",
     "content": " ",
     "url": "https://ut4.github.io/pike/api/pike_translator.html",
     "relUrl": "/api/pike_translator.html"
-  },"189": {
+  },"192": {
     "doc": "Pike&bsol;Validation",
     "title": "abstract class Pike\\Validation",
     "content": "Datan validointia helpottava luokka. ",
     "url": "https://ut4.github.io/pike/api/pike_validation.html#abstract-class-pikevalidation",
     "relUrl": "/api/pike_validation.html#abstract-class-pikevalidation"
-  },"190": {
+  },"193": {
     "doc": "Pike&bsol;Validation",
     "title": "Synopsis",
     "content": "abstract class Validation { /* Metodit */ public static makeValueValidator ( void ) : ValueValidator public static makeObjectValidator ( void ) : ObjectValidator public static is ( mixed $value, string $expectedType ) : bool public static isMoreOrEqualLength ( string|array|Countable $value, int $min, string $expectedType = 'string' ) : bool public static isLessOrEqualLength ( string|array|Countable $value, int $max, string $expectedType = 'string' ) : bool public static isEqualOrGreaterThan ( mixed $value, int $min ) : bool public static isEqualOrLessThan ( mixed $value, int $max ) : bool public static isOneOf ( mixed $value, array $listOfAllowedVals ) : bool public static isIdentifier ( $str ) : bool public static doesMatchRegexp ( $str, string $pattern ) : bool } . ",
     "url": "https://ut4.github.io/pike/api/pike_validation.html#synopsis",
     "relUrl": "/api/pike_validation.html#synopsis"
-  },"191": {
+  },"194": {
     "doc": "Pike&bsol;Validation",
     "title": "Metodit",
     "content": "makeObjectValidator() . Luo uuden Pike\\ObjectValidator-olion. Signature . public static function makeObjectValidator( void ) : ObjectValidator . Esimerkit . Katso myös Datan validointi &gt; Olioiden validointi. $validator = Validation::makeObjectValidator(); . makeValueValidator() . Luo uuden Pike\\ValueValidator-olion. Signature . public static function makeValueValidator( void ) : ValueValidator . Esimerkit . Katso myös Datan validointi &gt; Yksittäisten arvojen validointi. $validator = Validation::makeValueValidator(); . is() . | $expectedType tulee olla ‘string’|‘int’|‘number’|‘array’|‘bool’|‘float’|‘object’ | . Signature . public static function is ( mixed $value, string $expectedType ) : bool . Esimerkit . $isString = Validation::is('value', 'string'); . isMoreOrEqualLength() . Signature . public static function isMoreOrEqualLength ( string|array|Countable $value, int $min, string $expectedType = 'string' ) : bool . Esimerkit . $isMoreOrEqual = Validation::isMoreOrEqualLength('value', 3); . isLessOrEqualLength() . Signature . public static function isLessOrEqualLength ( string|array|Countable $value, int $max, string $expectedType = 'string' ) : bool . Esimerkit . $isLessOrEqual = Validation::isLessOrEqualLength('value', 32); . isEqualOrGreaterThan() . Signature . public static function isEqualOrGreaterThan ( mixed $value, int $min ) : bool . Esimerkit . $isEqualOrGreater = Validation::isEqualOrGreaterThan(5.0, 3); . isEqualOrLessThan() . Signature . public static function isEqualOrLessThan ( mixed $value, int $max ) : bool . Esimerkit . $isEqualOrLess = Validation::isEqualOrLessThan(5, 6); . isOneOf() . Signature . public static function isOneOf ( mixed $value, array $listOfAllowedVals ) : bool . Esimerkit . $isIt = Validation::isOneOf(5, [1,5,6]); . isIdentifier() . Signature . public static function isIdentifier ( $str ) : bool . Esimerkit . $isIt = Validation::isIdentifier('abc_1'); . doesMatchRegexp() . Signature . public static function doesMatchRegexp ( $str, string $pattern ) : bool . Esimerkit . $doesIt = Validation::doesMatchRegexp('value', '/.*/'); . ",
     "url": "https://ut4.github.io/pike/api/pike_validation.html#metodit",
     "relUrl": "/api/pike_validation.html#metodit"
-  },"192": {
+  },"195": {
     "doc": "Pike&bsol;Validation",
     "title": "Pike&bsol;Validation",
     "content": " ",
     "url": "https://ut4.github.io/pike/api/pike_validation.html",
     "relUrl": "/api/pike_validation.html"
-  },"193": {
+  },"196": {
     "doc": "Pike&bsol;ValueValidator",
     "title": "class Pike\\ValueValidator",
     "content": "Luokka jolla voi validoida yksittäisiä arvoja. Katso myös Datan validointi &gt; Yksittäisten arvojen validointi. ",
     "url": "https://ut4.github.io/pike/api/pike_value-validator.html#class-pikevaluevalidator",
     "relUrl": "/api/pike_value-validator.html#class-pikevaluevalidator"
-  },"194": {
+  },"197": {
     "doc": "Pike&bsol;ValueValidator",
     "title": "Synopsis",
     "content": "class ValueValidator { /* Metodit */ public rule ( string $ruleName, mixed ...$args ) : $this public validate ( mixed $value, string $valueName = 'value' ) : string[] public addRuleImpl ( string $name, callable $checkFn, string $errorTmpl ) : $this } . ",
     "url": "https://ut4.github.io/pike/api/pike_value-validator.html#synopsis",
     "relUrl": "/api/pike_value-validator.html#synopsis"
-  },"195": {
+  },"198": {
     "doc": "Pike&bsol;ValueValidator",
     "title": "Metodit",
     "content": "rule() . Lisää uuden validaatiosäännön. Signature . public function rule ( string $ruleName, mixed ...$args ) : $this . Esimerkit . $validator-&gt;rule('is', 'string')-&gt;rule('minLength', 10); . validate() . Validoi arvon $value. Palauttaa virheviestit, tai [] mikäli niitä ei ollut. Signature . public function validate ( mixed $value, string $valueName = 'value' ) : string[] . Esimerkit . $errors = $validator-&gt;validate('foo', 'Inputin nimi'); . addRuleImpl() . Rekisteröi custom-validaatiosääntöimplementaation. Käytettävissä vain siihen lisätyssä oliossa. Signature . public function addRuleImpl ( string $name, callable $checkFn, string $errorTmpl ) : $this . Esimerkit . Katso myös Datan validointi &gt; Custom one-time -validaattorit. $v = $v-&gt;addRuleImpl('isFoo', function ($value) { return $value === 'foo'; }, '%s ei ole foo'); . ",
     "url": "https://ut4.github.io/pike/api/pike_value-validator.html#metodit",
     "relUrl": "/api/pike_value-validator.html#metodit"
-  },"196": {
+  },"199": {
     "doc": "Pike&bsol;ValueValidator",
     "title": "Pike&bsol;ValueValidator",
     "content": " ",
     "url": "https://ut4.github.io/pike/api/pike_value-validator.html",
     "relUrl": "/api/pike_value-validator.html"
-  },"197": {
-    "doc": "Testaus",
-    "title": "Testaus",
-    "content": "Tätä tutoriaalia ei ole vielä kirjoitettu! . ",
-    "url": "https://ut4.github.io/pike/tutorials/testing.html",
-    "relUrl": "/tutorials/testing.html"
-  },"198": {
+  },"200": {
     "doc": "Testaus",
     "title": "Testaus",
     "content": "Pike\\TestUtils on kokoelma luokkia jotka auttaa Pike-applikaation testauksessa. ",
     "url": "https://ut4.github.io/pike/in-depth/testing.html",
     "relUrl": "/in-depth/testing.html"
-  },"199": {
+  },"201": {
     "doc": "Testaus",
     "title": "Sisällysluettelo",
     "content": ". | HTTP-reittien testaus . | Esimerkki | . | . ",
     "url": "https://ut4.github.io/pike/in-depth/testing.html#sis%C3%A4llysluettelo",
     "relUrl": "/in-depth/testing.html#sisällysluettelo"
-  },"200": {
+  },"202": {
     "doc": "Testaus",
     "title": "HTTP-reittien testaus",
-    "content": "Pikessä kontrollerien testaus suoritetaan \\Pike\\TestUtils\\HttpTestUtils-traitin metodilla sendRequest(), joka tarvitsee kolme asiaa: . | Konfiguroitu Pike-applikaatio (\\Pike\\App-olio) | Testattava reitti (\\Pike\\Request-olio) | Vastaus, joka varastoi testin tilan (\\Pike\\TestUtils\\MutedSpyingResponse-olio) | . Esimerkki . &lt;?php use PHPUnit\\Framework\\TestCase; use Me\\Testing\\MyApp; use Pike\\{AppContext, Request, TestUtils\\HttpTestUtils}; class MyControllerTest extends TestCase { // 1. Sisällytä trait use HttpTestUtils; public function testSomeRouteReturnsFoo(): void { // 2. Luo applikaatio-olio $config = []; $ctx = new AppContext; $app = $this-&gt;makeApp([MyApp::class, 'create'], $config, $ctx); // 3. Luo olio testattavalle reitille $body = null; $files = null; $serverVars = null; $req = new Request('/some-route', 'GET', $body, $files, $serverVars); // 4. Luo olio vastaukselle $res = $this-&gt;makeSpyingResponse(); // 5. Suorita testi $this-&gt;sendRequest($req, $res, $app); // 6. Assertoi $this-&gt;assertResponseMetaEquals(200, 'application/json', $res); $this-&gt;assertEquals(json_encode((object) ['message' =&gt; 'foo']), $res-&gt;getActualBody()); } } . ",
+    "content": "Pikessä kontrollerien testaus suoritetaan \\Pike\\TestUtils\\HttpTestUtils-traitilla seuraavasti. Esimerkki . &lt;?php use PHPUnit\\Framework\\TestCase; use Me\\Testing\\MyApp; use Pike\\{AppContext, Request, TestUtils\\HttpTestUtils}; class MyControllerTest extends TestCase { // 1. Sisällytä trait use HttpTestUtils; public function testSomeRouteReturnsFoo(): void { // 2. Luo applikaatio-olio $app = $this-&gt;makeApp([MyApp::class, 'create']); // 3. Luo olio testattavalle reitille $body = null; $files = null; $serverVars = null; $req = new Request('/some-route', 'GET', $body, $files, $serverVars); // 5. Suorita testi $res = $app-&gt;sendRequest($req); // 6. Assertoi $this-&gt;assertResponseMetaEquals(200, 'application/json', $res); $this-&gt;assertEquals(json_encode((object) ['message' =&gt; 'foo']), $res-&gt;getActualBody()); } } . ",
     "url": "https://ut4.github.io/pike/in-depth/testing.html#http-reittien-testaus",
     "relUrl": "/in-depth/testing.html#http-reittien-testaus"
-  },"201": {
+  },"203": {
+    "doc": "Testaus",
+    "title": "Testaus",
+    "content": "Tätä tutoriaalia ei ole vielä kirjoitettu! . ",
+    "url": "https://ut4.github.io/pike/tutorials/testing.html",
+    "relUrl": "/tutorials/testing.html"
+  },"204": {
     "doc": "Tutoriaalit",
     "title": "Tutoriaalit",
     "content": "Step-by-step ohjeita, joilla pääset nopeasti alkuun. ",
     "url": "https://ut4.github.io/pike/tutorials/tutorials.html",
     "relUrl": "/tutorials/tutorials.html"
-  },"202": {
+  },"205": {
     "doc": "Datan validointi",
     "title": "Datan validointi",
     "content": "Pike sisältää luokat olioiden, ja yksittäisten arvojen validoimiseen. ",
     "url": "https://ut4.github.io/pike/in-depth/validation.html",
     "relUrl": "/in-depth/validation.html"
-  },"203": {
+  },"206": {
     "doc": "Datan validointi",
     "title": "Sisällysluettelo",
     "content": ". | Olioiden validointi | Yksittäisten arvojen validointi | Custom one-time -validaattorit | Oletusvalidaattorit . | rule(‘type’, ‘string’|’int’|’number’|’array’|’bool’|’float’|’object’ $expectedType) | rule(‘minLength’, int $minLength) | rule(‘maxLength’, int $maxLength) | rule(‘min’, int $min) | rule(‘max’, int $max) | rule(‘in’, array $listOfValues) | rule(‘identifier’) | rule(‘regexp’, string $pattern) | . | . ",
     "url": "https://ut4.github.io/pike/in-depth/validation.html#sis%C3%A4llysluettelo",
     "relUrl": "/in-depth/validation.html#sisällysluettelo"
-  },"204": {
+  },"207": {
     "doc": "Datan validointi",
     "title": "Olioiden validointi",
     "content": "$object = (object) [ 'foo' =&gt; 'value', 'bar' =&gt; (object) ['key' =&gt; 'another value'], 'baz' =&gt; [ (object) ['key' =&gt; 'inside array'], (object) ['key' =&gt; 'inside array'], ] ]; $errors = \\Pike\\Validation::makeObjectValidator() -&gt;rule('foo', 'type', 'int') -&gt;rule('optional?', 'type', 'int') -&gt;rule('bar.key', 'minLength', 1) -&gt;rule('baz.*.key', 'in', ['a', 'b']) -&gt;validate($object); if (!$errors) ; // Ok, $errors == [] else ; // Fail, $errors == ['Virheviesti', 'Toinen virheviesti' ...] . ",
     "url": "https://ut4.github.io/pike/in-depth/validation.html#olioiden-validointi",
     "relUrl": "/in-depth/validation.html#olioiden-validointi"
-  },"205": {
+  },"208": {
     "doc": "Datan validointi",
     "title": "Yksittäisten arvojen validointi",
     "content": "$value = 'value'; $errors = \\Pike\\Validation::makeValueValidator() -&gt;rule('type', 'string') -&gt;rule('minLength', 1) -&gt;validate($value); if (!$errors) ; // Ok, $errors == [] else ; // Fail, $errors == ['Virheviesti', 'Toinen virheviesti' ...] . ",
     "url": "https://ut4.github.io/pike/in-depth/validation.html#yksitt%C3%A4isten-arvojen-validointi",
     "relUrl": "/in-depth/validation.html#yksittäisten-arvojen-validointi"
-  },"206": {
+  },"209": {
     "doc": "Datan validointi",
     "title": "Custom one-time -validaattorit",
     "content": "Yksittäiselle validaattori-instanssille lisätä omia validaattoreita metodilla addRuleImpl(). $v = Validation::makeValueValidator(); $v2 = Validation::makeValueValidator(); $v-&gt;addRuleImpl('myRule', function ($value, $arg1, $arg2) { return $value === $arg1 || $value === $arg2; }, '%s is not %s nor %d'); $errors = $v-&gt;rule('myRule', 'foo', 1) -&gt;validate('bar'); // value is not foo nor 1 $v2-&gt;rule('myRule', ...) // PikeException, No implementation found for `myRule`. ",
     "url": "https://ut4.github.io/pike/in-depth/validation.html#custom-one-time--validaattorit",
     "relUrl": "/in-depth/validation.html#custom-one-time--validaattorit"
-  },"207": {
+  },"210": {
     "doc": "Datan validointi",
     "title": "Oletusvalidaattorit",
     "content": "rule(‘type’, ‘string’|’int’|’number’|’array’|’bool’|’float’|’object’ $expectedType) . Tarkastaa onko arvo tyyppiä $expectedType. $valueValidator-&gt;rule('type', 'string')-&gt;validate([]); // Errors $valueValidator-&gt;rule('type', 'string')-&gt;validate('str'); // Ok . rule(‘minLength’, int $minLength) . Tarkastaa onko arvo merkkijono tai countable, jonka mb_strlen() tai count() arvo on suurempi, tai yhtä suuri kuin $minLength. $valueValidator-&gt;rule('minLength', 2)-&gt;validate('s'); // Errors $valueValidator-&gt;rule('minLength', 2)-&gt;validate('st'); // Ok $valueValidator-&gt;rule('minLength', 2)-&gt;validate([1]); // Errors $valueValidator-&gt;rule('minLength', 2)-&gt;validate([1,2]); // Ok . rule(‘maxLength’, int $maxLength) . Tarkastaa onko arvo merkkijono tai countable, jonka mb_strlen() tai count() arvo on pienempi, tai yhtä suuri kuin $maxLength. $valueValidator-&gt;rule('maxLength', 2)-&gt;validate('str'); // Errors $valueValidator-&gt;rule('maxLength', 2)-&gt;validate('st'); // Ok $valueValidator-&gt;rule('maxLength', 2)-&gt;validate([1,2,3]); // Errors $valueValidator-&gt;rule('maxLength', 2)-&gt;validate([1,2]); // Ok . rule(‘min’, int $min) . Tarkastaa onko arvo numero, jonka arvo on enemmän, tai yhtä suuri kuin $min. $valueValidator-&gt;rule('min', 5)-&gt;validate(1); // Errors $valueValidator-&gt;rule('min', 5)-&gt;validate('1'); // Errors $valueValidator-&gt;rule('min', 5)-&gt;validate('foo'); // Errors $valueValidator-&gt;rule('min', 5)-&gt;validate([]); // Errors $valueValidator-&gt;rule('min', 5)-&gt;validate(6); // Ok $valueValidator-&gt;rule('min', 5)-&gt;validate('6.0'); // Ok $valueValidator-&gt;rule('min', 5)-&gt;validate(5); // Ok . rule(‘max’, int $max) . Tarkastaa onko arvo numero, jonka arvo on vähemmän, tai yhtä suuri kuin $max. $valueValidator-&gt;rule('max', 5)-&gt;validate(6); // Errors $valueValidator-&gt;rule('max', 5)-&gt;validate('6'); // Errors $valueValidator-&gt;rule('max', 5)-&gt;validate('foo'); // Errors $valueValidator-&gt;rule('max', 5)-&gt;validate([]); // Errors $valueValidator-&gt;rule('max', 5)-&gt;validate(2); // Ok $valueValidator-&gt;rule('max', 5)-&gt;validate('2.0'); // Ok $valueValidator-&gt;rule('max', 5)-&gt;validate(5); // Ok . rule(‘in’, array $listOfValues) . Tarkastaa löytyykö arvo taulukosta $listOfValues. $valueValidator-&gt;rule('in', [1, 2])-&gt;validate(6); // Errors $valueValidator-&gt;rule('in', [1, 2])-&gt;validate('foo'); // Errors $valueValidator-&gt;rule('in', [1, 2])-&gt;validate('2'); // Errors (väärä tietotyyppi) $valueValidator-&gt;rule('in', [1, 2])-&gt;validate(2); // Ok . rule(‘identifier’) . Tarkastaa onko arvo merkkijono, joka: . | Alkaa kirjaimella a-zA-Z tai _ | Sisältää ainoastaan a-zA-Z0-9 tai _ | . $valueValidator-&gt;rule('identifier')-&gt;validate([]); // Errors (ei string) $valueValidator-&gt;rule('identifier')-&gt;validate('Ab#'); // Errors (non-ascii) $valueValidator-&gt;rule('identifier')-&gt;validate('Abä'); // Errors (non-ascii) $valueValidator-&gt;rule('identifier')-&gt;validate('4foo'); // Errors (alkaa numerolla) $valueValidator-&gt;rule('identifier')-&gt;validate('Abc'); // Ok $valueValidator-&gt;rule('identifier')-&gt;validate('Ab_c'); // Ok $valueValidator-&gt;rule('identifier')-&gt;validate('Ab5'); // Ok . rule(‘regexp’, string $pattern) . Tarkastaa onko arvo merkkijono, joka läpäisee säännöllisen lausekkeen $pattern. $valueValidator-&gt;rule('regexp', '/[a-c]+/')-&gt;validate('d')); // Errors $valueValidator-&gt;rule('regexp', '/[a-c]+/')-&gt;validate('')); // Errors $valueValidator-&gt;rule('regexp', '/[a-c]+/')-&gt;validate([])); // Errors $valueValidator-&gt;rule('regexp', '/[a-c]+/')-&gt;validate('a')); // Ok $valueValidator-&gt;rule('regexp', '/[a-c]+/')-&gt;validate('abc')); // Ok . ",
