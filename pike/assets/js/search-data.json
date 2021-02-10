@@ -37,7 +37,7 @@
   },"6": {
     "doc": "Autentikaatio",
     "title": "Autentikaatio",
-    "content": "Pike sisältää autentikaatiomoduulin, jolla on yksi julkinen luokka - Pike\\Auth\\Authenticator. Autentikaattori käyttää oletuksena tietokantaa pitkäaikaisen, ja php-natiivia sessiota lyhytaikaisen tiedon tallennukseen. Pike\\Auth\\Authenticator olettaa, että sille annettu data on semanttisesti validia. Esim. 'ei-email' tai tyhjä merkkijono on sen mielestä ihan yhtä validi kuin 'validi@email.com' tai 'Kryptograafisest1 vahva salasana (€&amp;#'. Muista siis validoida sille annetut arvot esim. \\Pike\\Validation-luokkaa käyttäen. use \\Pike\\Auth\\Authenticator; class MyCtrl { public function __construct(Authenticator $auth) { $this-&gt;auth = $auth; } // tai.. public function myMethod(Authenticator $auth): void { // tee jotain $auth:llä } } . ",
+    "content": "Pike sisältää autentikaatiomoduulin, jolla on yksi julkinen luokka - Pike\\Auth\\Authenticator. Autentikaattori käyttää oletuksena tietokantaa pitkäaikaisen, ja php-natiivia sessiota lyhytaikaisen tiedon tallennukseen. Pike\\Auth\\Authenticator olettaa, että sille annettu data on semanttisesti validia. Esim. 'ei-email' tai tyhjä merkkijono on sen mielestä ihan yhtä validi kuin 'validi@email.com' tai 'Kryptograafisest1 vahva salasana (€&amp;#'. Muista siis validoida sille annetut arvot esim. \\Pike\\Validation-luokkaa käyttäen. use \\Pike\\Auth\\Authenticator; final class MyCtrl { public function __construct(Authenticator $auth) { $this-&gt;auth = $auth; } // tai.. public function myMethod(Authenticator $auth): void { // tee jotain $auth:llä } } . ",
     "url": "https://ut4.github.io/pike/in-depth/authentication.html",
     "relUrl": "/in-depth/authentication.html"
   },"7": {
@@ -271,7 +271,7 @@
   },"45": {
     "doc": "Tiedostojen hallinta",
     "title": "Tiedostot",
-    "content": "\\Pike\\FileSystem on abstraktio yleisimpien php-natiivien tiedostonhallintafunktioiden (is_dir(), file_get_contents()) ympärille. use \\Pike\\Interfaces\\FileSystemInterface; class MyCtrl { public function __construct(FileSystemInterface $fs) { $this-&gt;fs = $fs; } // tai.. public function myMethod(FileSystemInterface $fs): void { // tee jotain $fs:llä } } . ",
+    "content": "\\Pike\\FileSystem on abstraktio yleisimpien php-natiivien tiedostonhallintafunktioiden (is_dir(), file_get_contents()) ympärille. use \\Pike\\Interfaces\\FileSystemInterface; final class MyCtrl { public function __construct(FileSystemInterface $fs) { $this-&gt;fs = $fs; } // tai.. public function myMethod(FileSystemInterface $fs): void { // tee jotain $fs:llä } } . ",
     "url": "https://ut4.github.io/pike/in-depth/filesystem.html#tiedostot",
     "relUrl": "/in-depth/filesystem.html#tiedostot"
   },"46": {
@@ -1213,7 +1213,7 @@
   },"202": {
     "doc": "Testaus",
     "title": "HTTP-reittien testaus",
-    "content": "Pikessä kontrollerien testaus suoritetaan \\Pike\\TestUtils\\HttpTestUtils-traitilla seuraavasti. Esimerkki . &lt;?php use PHPUnit\\Framework\\TestCase; use Me\\Testing\\MyApp; use Pike\\{AppContext, Request, TestUtils\\HttpTestUtils}; class MyControllerTest extends TestCase { // 1. Sisällytä trait use HttpTestUtils; public function testSomeRouteReturnsFoo(): void { // 2. Luo applikaatio-olio $app = $this-&gt;makeApp([MyApp::class, 'create']); // 3. Luo olio testattavalle reitille $body = null; $files = null; $serverVars = null; $req = new Request('/some-route', 'GET', $body, $files, $serverVars); // 5. Suorita testi $res = $app-&gt;sendRequest($req); // 6. Assertoi $this-&gt;assertResponseMetaEquals(200, 'application/json', $res); $this-&gt;assertEquals(json_encode((object) ['message' =&gt; 'foo']), $res-&gt;getActualBody()); } } . ",
+    "content": "Pikessä kontrollerien testaus suoritetaan \\Pike\\TestUtils\\HttpTestUtils-traitilla seuraavasti. Esimerkki . &lt;?php use PHPUnit\\Framework\\TestCase; use Me\\Testing\\MyApp; use Pike\\{AppContext, Request, TestUtils\\HttpTestUtils}; class MyControllerTest extends TestCase { // 1. Sisällytä trait use HttpTestUtils; public function testSomeRouteReturnsFoo(): void { // 2. Luo applikaatio-olio $app = $this-&gt;makeApp([MyApp::class, 'create']); // 3. Luo olio testattavalle reitille $body = null; $files = null; $serverVars = null; $req = new Request('/some-route', 'GET', $body, $files, $serverVars); // 4. Suorita testi $res = $app-&gt;sendRequest($req); // 5. Assertoi $this-&gt;assertResponseMetaEquals(200, 'application/json', $res); $this-&gt;assertEquals(json_encode((object) ['message' =&gt; 'foo']), $res-&gt;getActualBody()); } } . ",
     "url": "https://ut4.github.io/pike/in-depth/testing.html#http-reittien-testaus",
     "relUrl": "/in-depth/testing.html#http-reittien-testaus"
   },"203": {
